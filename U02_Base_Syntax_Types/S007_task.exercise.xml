@@ -1,0 +1,23 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<slide.exercise xmlns="https://ulearn.me/schema/v2" title="Упражнение. Проверка числа" id="b69062ee-7dc1-42cb-b188-56ee76d4f8f8">
+  <scoring group="exercise" passedTestsScore="2"/>
+  <markdown>
+    В метод передается число от 0 до 99999. Программа должна напечатать TRUE (или FALSE в противном случае), если запись этого числа содержит только чётные цифры.
+
+    Пример: 6204
+
+    Результат: TRUE
+
+  </markdown>
+  <exercise.universal type="check-exit-code" exerciseDirName="task" noStudentZip="true">
+    <checkForPlagiarism>true</checkForPlagiarism>
+    <hideSolutions>true</hideSolutions>
+    <hideExpectedOutput>false</hideExpectedOutput>
+    <userCodeFile>S007.java</userCodeFile>
+    <dockerImageName>java-pg-sandbox</dockerImageName>
+    <interpretNonJsonOutputAs>CE</interpretNonJsonOutputAs>
+    <run>java -ea -Duser.country=RU -Duser.language=ru -Dfile.encoding=UTF-8 --class-path=./classpath/* ./S007.java || exit 0
+    </run>
+    <region>Task</region>
+  </exercise.universal>
+</slide.exercise>

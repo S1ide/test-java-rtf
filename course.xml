@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<course xmlns="https://ulearn.me/schema/v2" title="Java Spring Boot.">
+  <enableCodeReviewAndQuizManualCheckForEveryone>true</enableCodeReviewAndQuizManualCheckForEveryone>
+  <dictionaryFile>dictionary.txt</dictionaryFile>
+  <defaultLanguage>java</defaultLanguage>
+  <units>
+    <add>*/unit.xml</add>
+  </units>
+  <scoring defaultQuiz="homework" defaultExercise="homework" default="homework">
+    <group id="homework" abbr="ДЗ" maxAdditionalScore="0">Домашняя работа</group>
+    <group id="exercise" abbr="УПР" maxAdditionalScore="0">Упраженения</group>
+  </scoring>
+</course>
