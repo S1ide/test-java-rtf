@@ -29,7 +29,7 @@
         <userCodeFile>S022.java</userCodeFile>
         <dockerImageName>java-pg-sandbox</dockerImageName>
         <interpretNonJsonOutputAs>CE</interpretNonJsonOutputAs>
-        <run>java -ea -Duser.country=RU -Duser.language=ru -Dfile.encoding=UTF-8 --class-path=./classpath/* ./S022.java || exit 0</run>
+        <run>mvn package java -jar application.jar</run>
         <region>Task</region>
     </exercise.universal>
 </slide.exercise>
