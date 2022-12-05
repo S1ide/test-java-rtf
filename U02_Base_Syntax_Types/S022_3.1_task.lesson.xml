@@ -29,7 +29,7 @@
         <userCodeFile>S022.java</userCodeFile>
         <dockerImageName>java-pg-sandbox</dockerImageName>
         <interpretNonJsonOutputAs>CE</interpretNonJsonOutputAs>
-        <run>mvn package java -jar application.jar</run>
+        <run>mvn package</run>
         <region>Task</region>
     </exercise.universal>
 </slide.exercise>
