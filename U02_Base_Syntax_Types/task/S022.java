@@ -13,7 +13,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 
-public class S019 {
+public class S022 {
     public static void main(String[] args) {
         var result = RunTest(args);
         Gson gson = new Gson();
