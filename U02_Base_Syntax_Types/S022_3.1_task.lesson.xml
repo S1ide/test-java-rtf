@@ -22,14 +22,14 @@
 
         Ввод: **2500000000**, Вывод: "Long"
     </markdown>
-    <exercise.universal type="check-exit-code" exerciseDirName="Exercise" noStudentZip="true">
+    <exercise.universal type="check-exit-code" exerciseDirName="task" noStudentZip="true">
         <checkForPlagiarism>true</checkForPlagiarism>
         <hideSolutions>true</hideSolutions>
         <hideExpectedOutput>false</hideExpectedOutput>
         <userCodeFile>ExerciseApplication.java</userCodeFile>
         <dockerImageName>java-pg-sandbox</dockerImageName>
         <interpretNonJsonOutputAs>CE</interpretNonJsonOutputAs>
-        <run>mvn package && java -jar application.jar</run>
+        <run>cd ./practice/Exercise && mvn package</run>
         <region>Task</region>
     </exercise.universal>
 </slide.exercise>
