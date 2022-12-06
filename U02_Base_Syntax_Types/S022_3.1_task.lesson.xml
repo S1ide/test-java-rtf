@@ -29,7 +29,7 @@
         <userCodeFile>./src/main/java/com/ulearn/exercise/ExerciseApplication.java</userCodeFile>
         <dockerImageName>java-pg-sandbox</dockerImageName>
         <interpretNonJsonOutputAs>CE</interpretNonJsonOutputAs>
-        <run>mvn -f (".//pom.xml") package -DskipTests || java -jar application.jar</run>
+        <run>mvn clean -f (".//pom.xml") package -DskipTests || java -jar application.jar</run>
         <region>Task</region>
     </exercise.universal>
 </slide.exercise>
