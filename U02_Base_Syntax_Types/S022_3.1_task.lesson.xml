@@ -26,7 +26,7 @@
         <checkForPlagiarism>true</checkForPlagiarism>
         <hideSolutions>true</hideSolutions>
         <hideExpectedOutput>false</hideExpectedOutput>
-        <userCodeFile>Exercise/src/main/java/com/ulearn/exercise/ExerciseApplication.java</userCodeFile>
+        <userCodeFile>./src/main/java/com/ulearn/exercise/ExerciseApplication.java</userCodeFile>
         <dockerImageName>java-pg-sandbox</dockerImageName>
         <interpretNonJsonOutputAs>CE</interpretNonJsonOutputAs>
         <run>mvn package || java -jar application.jar</run>
