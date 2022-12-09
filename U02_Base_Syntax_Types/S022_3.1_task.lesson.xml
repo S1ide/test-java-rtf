@@ -29,9 +29,9 @@
         <hideExpectedOutput>false</hideExpectedOutput>
         <userCodeFile>./src/main/java/com/ulearn/exercise/ExerciseApplication.java</userCodeFile>
         <dockerImageName>java-pg-sandbox</dockerImageName>
-        <timeLimit>20</timeLimit>
+        <timeLimit>30</timeLimit>
         <interpretNonJsonOutputAs>CE</interpretNonJsonOutputAs>
-        <run>psql -U postgres</run>
+        <run>mvn clean --s settings.xml package -DskipTests; java -jar /app/target/Exercise-0.0.1-SNAPSHOT.jar</run>
         <region>Task</region>
     </exercise.universal>
 </slide.exercise>
