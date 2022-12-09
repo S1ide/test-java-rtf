@@ -31,7 +31,7 @@
         <dockerImageName>java-pg-sandbox</dockerImageName>
         <timeLimit>20</timeLimit>
         <interpretNonJsonOutputAs>CE</interpretNonJsonOutputAs>
-        <run>psql</run>
+        <run>psql -U postgres</run>
         <region>Task</region>
     </exercise.universal>
 </slide.exercise>
