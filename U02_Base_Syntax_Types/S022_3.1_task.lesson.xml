@@ -25,12 +25,12 @@
     <exercise.universal type="check-exit-code" exerciseDirName="Exercise" noStudentZip="true">
         <checkForPlagiarism>true</checkForPlagiarism>
         <hideSolutions>true</hideSolutions>
-        <includePathForChecker>./Exercise/</includePathForChecker>
+        <includePathForChecker>./Exercise/.mvn/</includePathForChecker>
         <hideExpectedOutput>false</hideExpectedOutput>
         <userCodeFile>./src/main/java/com/ulearn/exercise/ExerciseApplication.java</userCodeFile>
         <dockerImageName>java-pg-sandbox</dockerImageName>
         <interpretNonJsonOutputAs>CE</interpretNonJsonOutputAs>
-        <run>ls -a || mvn clean --s .mvn/settings.xml package -DskipTests || java -jar application.jar</run>
+        <run>ls -a || mvn clean --s settings.xml package -DskipTests || java -jar application.jar</run>
         <region>Task</region>
     </exercise.universal>
 </slide.exercise>
