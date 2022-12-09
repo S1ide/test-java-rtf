@@ -30,7 +30,7 @@
         <userCodeFile>./src/main/java/com/ulearn/exercise/ExerciseApplication.java</userCodeFile>
         <dockerImageName>java-pg-sandbox</dockerImageName>
         <interpretNonJsonOutputAs>CE</interpretNonJsonOutputAs>
-        <run>mvn clean --s settings.xml package -DskipTests; java -jar /target/Exercise-0.0.1-SNAPSHOT.jar</run>
+        <run>mvn clean --s settings.xml package -DskipTests; ls -a; cd target; ls -a; java -jar target/Exercise-0.0.1-SNAPSHOT.jar</run>
         <region>Task</region>
     </exercise.universal>
 </slide.exercise>
