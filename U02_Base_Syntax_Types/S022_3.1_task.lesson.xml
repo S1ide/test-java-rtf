@@ -25,6 +25,7 @@
     <exercise.universal type="check-exit-code" exerciseDirName="Exercise" noStudentZip="true">
         <checkForPlagiarism>true</checkForPlagiarism>
         <hideSolutions>true</hideSolutions>
+        <includePathForCheker>./.mvn/</includePathForCheker>
         <hideExpectedOutput>false</hideExpectedOutput>
         <userCodeFile>./src/main/java/com/ulearn/exercise/ExerciseApplication.java</userCodeFile>
         <dockerImageName>java-pg-sandbox</dockerImageName>
