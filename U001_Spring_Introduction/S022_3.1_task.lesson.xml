@@ -26,7 +26,7 @@
         <checkForPlagiarism>true</checkForPlagiarism>
         <hideSolutions>true</hideSolutions>
         <hideExpectedOutput>false</hideExpectedOutput>
-        <userCodeFile>./src/main/java/com/ulearn/exercise/ExerciseApplication.java</userCodeFile>
+        <userCodeFile>./src/main/java/ulearn/practice1/Practice1Application.java</userCodeFile>
         <dockerImageName>java-pg-sandbox</dockerImageName>
         <timeLimit>30</timeLimit>
         <interpretNonJsonOutputAs>CE</interpretNonJsonOutputAs>
