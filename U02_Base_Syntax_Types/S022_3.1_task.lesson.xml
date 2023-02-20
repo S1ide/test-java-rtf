@@ -27,7 +27,7 @@
         <hideSolutions>true</hideSolutions>
         <includePathForChecker>./Exercise/.mvn/</includePathForChecker>
         <hideExpectedOutput>false</hideExpectedOutput>
-        <userCodeFile>./src/main/java/ulearn/practice1/Practice1Application.java</userCodeFile>
+        <userCodeFile>./src/main/java/com/ulearn/exercise/ExerciseApplication.java</userCodeFile>
         <dockerImageName>java-pg-sandbox</dockerImageName>
         <timeLimit>30</timeLimit>
         <interpretNonJsonOutputAs>CE</interpretNonJsonOutputAs>
