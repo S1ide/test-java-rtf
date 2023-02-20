@@ -22,7 +22,7 @@ import java.util.List;
 @EntityScan(basePackages = "com.ulearn.exercise.entity")
 @ComponentScan(basePackages = "com.ulearn.exercise")
 public class SpringConfiguration {
-    @Autowired private CustomerRepository repository;
+    private CustomerRepository repository;
     private final Logger logger = LoggerFactory.getLogger(ExerciseApplication.class);
 
     @PostConstruct

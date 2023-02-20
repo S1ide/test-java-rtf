@@ -1,0 +1,37 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<slide.exercise xmlns="https://ulearn.me/schema/v2" title="Практика. Простой калькулятор" id="7c87b65c-a278-4173-addc-1f9a3b6ff9d1">
+    <scoring group="homework" passedTestsScore="1" codeReviewScore="4"/>
+    <markdown>
+        В этой практике вам будет необходимо написать свой собственный калькулятор, у которого будет 3 публичных метода и 2 приватных:
+
+        * Разберёмся с методами `calculate()`, — есть один публичный метод, который может принять строку, где может быть как **строка** **операция** **строка**,
+        так и **число** **операция** **число**. Обратите внимание, по формату они разделены пробелами. Затем уже в зависимости от типа полученной строки, мы получаем результат
+        из наших приватных методов.
+
+        * метод `getNumbers()`, — публичный метод, который складывает два числа и возвращает кол-во чётных цифр в их сумме.
+
+        * и последний метод `getMinimalType()`, — принимает число и возвращает минимальный целочисленный тип, к которому его можно привести.
+
+        Примеры работы метода `getMinimalType()` :
+
+        Ввод: **5**, Вывод: "Byte"
+
+        Ввод: **-35000**, Вывод: "Int"
+
+        Ввод: **512**, Вывод: "Short"
+
+        Ввод: **2500000000**, Вывод: "Long"
+    </markdown>
+    <exercise.universal type="check-exit-code" exerciseDirName="Exercise" noStudentZip="true">
+        <checkForPlagiarism>true</checkForPlagiarism>
+        <hideSolutions>true</hideSolutions>
+        <includePathForChecker>./Exercise/.mvn/</includePathForChecker>
+        <hideExpectedOutput>false</hideExpectedOutput>
+        <userCodeFile>./src/main/java/com/ulearn/exercise/ExerciseApplication.java</userCodeFile>
+        <dockerImageName>java-pg-sandbox</dockerImageName>
+        <timeLimit>30</timeLimit>
+        <interpretNonJsonOutputAs>CE</interpretNonJsonOutputAs>
+        <run>mvn clean --s /.mvn/settings.xml package; java -jar /target/practice1-0.0.1-SNAPSHOT.jar</run>
+        <region>Task</region>
+    </exercise.universal>
+</slide.exercise>
