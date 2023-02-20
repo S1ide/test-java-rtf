@@ -25,12 +25,13 @@
     <exercise.universal type="check-exit-code" exerciseDirName="Exercise" noStudentZip="true">
         <checkForPlagiarism>true</checkForPlagiarism>
         <hideSolutions>true</hideSolutions>
+        <includePathForChecker>./Exercise/.mvn/</includePathForChecker>
         <hideExpectedOutput>false</hideExpectedOutput>
         <userCodeFile>./src/main/java/ulearn/practice1/CoordinateCalculatorConfiguration.java</userCodeFile>
         <dockerImageName>java-pg-sandbox</dockerImageName>
         <timeLimit>30</timeLimit>
         <interpretNonJsonOutputAs>CE</interpretNonJsonOutputAs>
-        <run>ls</run>
+        <run>mvn clean --s ./.mvn/settings.xml package; java -jar ./target/practice1-0.0.1-SNAPSHOT.jar</run>
         <region>Task</region>
     </exercise.universal>
 </slide.exercise>
