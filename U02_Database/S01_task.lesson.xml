@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<slide.exercise xmlns="https://ulearn.me/schema/v2" title="БАЗА ДАННЫХ" id="38986aee-50f5-46db-aa17-c8bbc468b8e7">
+    <scoring group="homework" passedTestsScore="1" codeReviewScore="4"/>
+    <markdown>
+        ТЕСТ2
+    </markdown>
+    <exercise.universal type="check-exit-code" exerciseDirName="Exercise" noStudentZip="true">
+        <checkForPlagiarism>true</checkForPlagiarism>
+        <hideSolutions>true</hideSolutions>
+        <includePathForChecker>./Exercise/.mvn/</includePathForChecker>
+        <hideExpectedOutput>false</hideExpectedOutput>
+        <userCodeFile>./src/main/java/ulearn/practice2/Practice2Application.java</userCodeFile>
+        <dockerImageName>java-pg-sandbox</dockerImageName>
+        <timeLimit>30</timeLimit>
+        <interpretNonJsonOutputAs>CE</interpretNonJsonOutputAs>
+        <run>mvn clean --s ./settings.xml package; java -jar ./target/practice2-0.0.1-SNAPSHOT.jar</run>
+        <region>Task</region>
+    </exercise.universal>
+</slide.exercise>
