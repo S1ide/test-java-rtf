@@ -13,7 +13,7 @@
         <dockerImageName>java-pg-sandbox</dockerImageName>
         <timeLimit>30</timeLimit>
         <interpretNonJsonOutputAs>CE</interpretNonJsonOutputAs>
-        <run>docker-entrypoint.sh -c 'shared_buffers=128MB' &amp; mvn clean --s ./settings.xml package; java -jar ./target/practice2-0.0.1-SNAPSHOT.jar</run>
+        <run>docker-entrypoint.sh -c 'shared_buffers=128MB' &amp; mvn clean --s ./settings.xml package -DskipTests=true; java -jar ./target/practice2-0.0.1-SNAPSHOT.jar</run>
         <region>Task</region>
     </exercise.universal>
 </slide.exercise>
