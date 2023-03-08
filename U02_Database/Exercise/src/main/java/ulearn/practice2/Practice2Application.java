@@ -3,6 +3,8 @@ package ulearn.practice2;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+import java.io.PrintStream;
+
 //# region Task
 @SpringBootApplication
 public class Practice2Application {
