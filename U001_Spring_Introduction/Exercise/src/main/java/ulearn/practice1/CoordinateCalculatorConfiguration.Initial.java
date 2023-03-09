@@ -2,8 +2,10 @@ package ulearn.practice1;
 
 import org.apache.commons.lang3.NotImplementedException;
 
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 
 //#region Task
 @Configuration // Студент может не знать из лекций о этих аннотациях

@@ -12,26 +12,26 @@ import org.springframework.context.annotation.Primary;
 public class CoordinateCalculatorConfiguration {
 
     @Bean(name = "EquidistantMovement")
-    public ICoordinateCalculator EquidistantMovementCalculator()
+    public ICoordinateCalculator equidistantMovementCalculator()
     {
         return new EquidistantMovementCalculator();
     }
 
     @Bean(name = "LinearMovement")
-    public ICoordinateCalculator LinearMovementCalculator()
+    public ICoordinateCalculator linearMovementCalculator()
     {
         return new LinearMovementCalculator();
     }
 
     @Bean(name = "CircularMovement")
-    public ICoordinateCalculator CircularMovementCalculator()
+    public ICoordinateCalculator circularMovementCalculator()
     {
         return new CircularMovementCalculator();
     }
 
     @Bean(name = "GeneralMovement")
     @Primary()
-    public ICoordinateCalculator GeneralMovementCalculator()
+    public ICoordinateCalculator generalMovementCalculator()
     {
         return new GeneralMovementCalculator();
     }
@@ -47,7 +47,7 @@ public class CoordinateCalculatorConfiguration {
     public class EquidistantMovementCalculator extends CoordinateCalculator{
 
         @Override
-        public double Calculate(double[] velocity, double x0, double v0, int t)
+        public double calculate(double[] velocity, double x0, double v0, int t)
         {
             ThrowWhenWrongInput(velocity, t);
             var a = velocity[0] - v0;
@@ -58,7 +58,7 @@ public class CoordinateCalculatorConfiguration {
     public class LinearMovementCalculator extends CoordinateCalculator{
 
         @Override
-        public double Calculate(double[] velocity, double x0, double v0, int t)
+        public double calculate(double[] velocity, double x0, double v0, int t)
         {
             ThrowWhenWrongInput(velocity, t);
             return x0 + v0 * t;
@@ -68,7 +68,7 @@ public class CoordinateCalculatorConfiguration {
     public class CircularMovementCalculator extends CoordinateCalculator{
 
         @Override
-        public double Calculate(double[] velocity, double x0, double v0, int t)
+        public double calculate(double[] velocity, double x0, double v0, int t)
         {
             ThrowWhenWrongInput(velocity, t);
             var r_vector = x0;
@@ -81,7 +81,7 @@ public class CoordinateCalculatorConfiguration {
     public class GeneralMovementCalculator extends CoordinateCalculator{
 
         @Override
-        public double Calculate(double[] velocity, double x0, double v0, int t)
+        public double calculate(double[] velocity, double x0, double v0, int t)
         {
             ThrowWhenWrongInput(velocity, t);
             var x = x0 + v0;
