@@ -1,0 +1,23 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<slide xmlns="https://ulearn.me/schema/v2" title="POST" id="a89bb63f-c272-48cd-ada7-733418588022">
+    <markdown>
+        # POST
+        HTTP POST — метод создания ресурсов.
+
+        *Метод POST передает описание ресурса, обычно в формате JSON, и требует у целевого
+        сервиса создать этот ресурс по указанному URI.*
+
+        Как это работает:
+
+        Сервис получает информацию об указанном кофе в виде объекта Coffee и добавляет его в список
+        видов кофе. А потом возвращает объект Coffee, автоматически демаршалируемый Spring Boot в
+        формат JSON (по умолчанию), запрашивающему сервису или приложению:
+        ```
+        @PostMapping("/coffees")
+        Coffee postCoffee(@RequestBody Coffee coffee) {
+            coffees.add(coffee);
+            return coffee;
+        }
+        ```
+    </markdown>
+</slide>

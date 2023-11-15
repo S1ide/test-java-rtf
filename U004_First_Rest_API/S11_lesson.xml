@@ -1,0 +1,93 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<slide xmlns="https://ulearn.me/schema/v2" title="Совершенствуем код" id="11358068-1910-47ec-9115-6e36698d1622">
+    <markdown>
+        # Совершенствуем код
+        Несмотря на то, что данный код можно еще долго совершенствовать, мы обратим внимание еще
+        на 2 особенности:
+
+        **Уменьшение повторов в коде.** Для этого вынесем часть сопоставления URI, которая является
+        общей для всех методов класса RestApiDemoController, в аннотацию уровня класса
+        @RequestMapping — "/coffees". А далее можно удалить соответствующую часть из спецификаций
+        сопоставления URI всех методов:
+        ```
+        @RestController
+        @RequestMapping("/coffees")
+        class RestApiDemoController {
+            private List&lt;Coffee> coffees = new ArrayList&lt;>();
+
+            public RestApiDemoController() {
+                coffees.addAll(List.of(
+                    new Coffee("Café Cereza"),
+                    new Coffee("Café Ganador"),
+                    new Coffee("Café Lareño"),
+                    new Coffee("Café Três Pontas")
+                ));
+            }
+
+            @GetMapping
+            Iterable&lt;Coffee> getCoffees() {
+                return coffees;
+            }
+
+            @GetMapping("/{id}")
+            Optional&lt;Coffee> getCoffeeById(@PathVariable String id) {
+                for (Coffee c: coffees) {
+                    if (c.getId().equals(id)) {
+                        return Optional.of(c);
+                    }
+                }
+
+                return Optional.empty();
+            }
+
+            @PostMapping
+            Coffee postCoffee(@RequestBody Coffee coffee) {
+                coffees.add(coffee);
+                return coffee;
+            }
+            @PutMapping("/{id}")
+            Coffee putCoffee(@PathVariable String id, @RequestBody Coffee coffee) {
+                int coffeeIndex = -1;
+
+                for (Coffee c: coffees) {
+                    if (c.getId().equals(id)) {
+                        coffeeIndex = coffees.indexOf(c);
+                        coffees.set(coffeeIndex, coffee);
+                    }
+                }
+
+                return (coffeeIndex == -1) ? postCoffee(coffee) : coffee;
+            }
+
+            @DeleteMapping("/{id}")
+            void deleteCoffee(@PathVariable String id) {
+                coffees.removeIf(c -> c.getId().equals(id));
+            }
+        }
+        ```
+        **Возврат кодов состояния HTTP там, где этого требует спецификация.** Заглянув в документ IETF,
+        мы увидим, что коды состояния HTTP для ответов метода PUT обязательны. Для этого
+        модифицируем метод putCoffee. Теперь он будет возвращать не только модифицированный или
+        созданный объект Coffee, но и объект ResponseEntity, содержащий вышеупомянутый объект
+        Coffee и код состояния HTTP: 201 (Создано), если соответствующий вид кофе отсутствовал в
+        списке, и 200 (OK), если он уже существовал и был обновлен.
+        ```
+        @PutMapping("/{id}")
+        ResponseEntity&lt;Coffee> putCoffee(@PathVariable String id,
+                @RequestBody Coffee coffee) {
+            int coffeeIndex = -1;
+
+            for (Coffee c: coffees) {
+                if (c.getId().equals(id)) {
+                    coffeeIndex = coffees.indexOf(c);
+                    coffees.set(coffeeIndex, coffee);
+                }
+            }
+
+            return (coffeeIndex == -1) ?
+                    new ResponseEntity&lt;>(postCoffee(coffee), HttpStatus.CREATED) :
+                    new ResponseEntity&lt;>(coffee, HttpStatus.OK);
+        }
+        ```
+    </markdown>
+</slide>

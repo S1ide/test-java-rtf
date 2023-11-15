@@ -1,0 +1,145 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<slide xmlns="https://ulearn.me/schema/v2" title="Попробуем GET" id="ba390c5d-cde8-420d-8ec3-030a635b6651">
+    <markdown>
+        # Попробуем GET
+        Важно знать, что REST API работают либо по отдельности с объектами, либо в виде группы
+        связанных объектов.
+
+        Вернемся к кофе: нам может понадобиться извлечь какой-то конкретный вид кофе, например, все
+        сильно обжаренные или только кофе из зерен «Арабика». Чтобы учесть варианты извлечения
+        экземпляров класса, нужно создавать в коде несколько методов.
+
+        Создадим список объектов класса Coffee для метода, который возвращает несколько объектов
+        Coffee, как показано ниже. А также определим переменную, чтобы хранить в ней эту группу видов
+        кофе в виде List объектов Coffee. В качестве высокоуровневого интерфейса для типа переменной-
+        члена выбираем List, но в действительности присваиваем для использования внутри класса
+        RestApiDemoController пустой ArrayList:
+        ```
+        @RestController
+        class RestApiDemoController {
+            private List&lt;Coffee> coffees = new ArrayList&lt;>();
+        }
+        ```
+        *Рекомендация: выбирайте самый верхний уровень типа (класс, интерфейс), который
+        способен удовлетворить потребности внутренних и внешних API. Ибо в некоторых
+        случаях, как здесь, они не совпадают. Во внутренних API - List обеспечивает API уровня,
+        позволяющего создать чистейшую реализацию, на основе ваших критериев. Во
+        внешних, можно описать абстракцию даже более высокого уровня.*
+
+        Чтобы убедиться, что все работает как надо, не повредит иметь некоторые данные для
+        извлечения. В коде ниже написан конструктор класса RestApiDemoController, с добавлением кода
+        для заполнения списка видов кофе при создании объекта:
+        ```
+        @RestController
+        class RestApiDemoController {
+            private List&lt;Coffee> coffees = new ArrayList&lt;>();
+
+            public RestApiDemoController() {
+                coffees.addAll(List.of(
+                    new Coffee("Café Cereza"),
+                    new Coffee("Café Ganador"),
+                    new Coffee("Café Lareño"),
+                    new Coffee("Café Três Pontas")
+                ));
+            }
+        }
+        ```
+        Далее создаем метод в классе RestApiDemoController, который возвращает итерируемую группу
+        видов кофе, представленную переменной экземпляра coffees. Так как нужную функциональность
+        для этого API обеспечит любой итерируемый тип, для этого воспользуемся ``Iterable&lt;Coffee>``.
+
+        Используем @RequestMapping для получения (GET) списка видов кофе:
+        ```
+        @RestController
+        class RestApiDemoController {
+            private List&lt;Coffee> coffees = new ArrayList&lt;>();
+
+            public RestApiDemoController() {
+                coffees.addAll(List.of(
+                    new Coffee("Café Cereza"),
+                    new Coffee("Café Ganador"),
+                    new Coffee("Café Lareño"),
+                    new Coffee("Café Três Pontas")
+                ));
+            }
+
+            @RequestMapping(value = "/coffees", method = RequestMethod.GET)
+            Iterable&lt;Coffee> getCoffees() {
+                return coffees;
+            }
+        }
+        ```
+        Добавляем к аннотации @RequestMapping спецификацию пути /coffees и тип метода
+        RequestMethod.GET, он показывает, что метод будет отвечать на запросы по пути /coffees, но при
+        этом возможны только запросы типа HTTP GET. Этот метод отвечает не за обновления какого-либо
+        вида, а за извлечение данных.
+
+        *Spring Boot умеет с помощью включенных в Spring Web зависимостей Jackson автоматически
+        выполнять маршалинг и демаршалинг объектов в JSON и другие форматы.*
+
+        Также мы можем упростить код с помощью @GetMapping. Эта аннотация допускает только
+        запросы типа GET, это позволяет указать только путь (без path =, так как никакого разрешения
+        конфликтов параметров не требуется), сокращая код.
+        ```
+        @GetMapping("/coffees")
+        Iterable&lt;Coffee> getCoffees() {
+            return coffees;
+        }
+        ```
+
+        ## ПОЛЕЗНО ЗНАТЬ
+        Специализированные версии аннотации @RequestMapping:
+        + @GetMapping;
+        + @PostMapping;
+        + @PutMapping;
+        + @PatchMapping;
+        + @DeleteMapping.
+        Все эти аннотации можно применять как на уровне класса, так и метода. Если добавить аннотации
+        @RequestMapping в RestApiDemoController и его метод getCoffees(), как показано ниже, реакция
+        приложения будет такая же, как и предыдущем коде:
+        ```
+        @RestController
+        @RequestMapping("/")
+        class RestApiDemoController {
+            private List&lt;Coffee> coffees = new ArrayList&lt;>();
+
+            public RestApiDemoController() {
+                coffees.addAll(List.of(
+                    new Coffee("Café Cereza"),
+                    new Coffee("Café Ganador"),
+                    new Coffee("Café Lareño"),
+                    new Coffee("Café Três Pontas")
+                ));
+            }
+
+            @GetMapping("/coffees")
+            Iterable&lt;Coffee> getCoffees() {
+                return coffees;
+            }
+        }
+        ```
+        Но что же мы будем делать, если нам нужно извлечь один конкретный вид кофе?
+
+        Извлечение одного элемента происходит тем же образом, что и извлечение нескольких. Для этого
+        добавляем метод getCoffeeById.
+
+        Часть ``{id}`` указанного пути - переменная URI (унифицированный идентификатор ресурса), значение
+        которой передается методу ``getCoffeeById`` с помощью параметра экземпляра id путем снабжения
+        его аннотацией ``@PathVariable``.
+
+        В цикле метод проходится по видам кофе и при обнаружении соответствия - возвращает
+        заполненный объект ``Optional&lt;Coffee>``, а если заданный id отсутствует - возвращается пустой объект
+        ``Optional&lt;Coffee>``.
+        ```
+        @GetMapping("/coffees/{id}")
+        Optional&lt;Coffee> getCoffeeById(@PathVariable String id) {
+            for (Coffee c: coffees) {
+                if (c.getId().equals(id)) {
+                    return Optional.of(c);
+                }
+            }
+            return Optional.empty();
+        }
+        ```
+    </markdown>
+</slide>

@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<unit xmlns="https://ulearn.me/schema/v2" title="Первый REST API" id="55229a76-702e-4cdf-a338-246809e7250a" url="firstRestApi">
+    <slides>
+        <add>S*.xml</add>
+    </slides>
+</unit>
