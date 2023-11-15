@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<slide.quiz xmlns="https://ulearn.me/schema/v2" title="Контрольный вопрос" id="0498502a-f30f-4c2e-86d5-450a43416090">
+  <scoring manualCheck="false" tries="2"/>
+  <question.choice id="compileRun" multiple="false" shuffle="true" maxScore="1">
+    <text>Как реализуется фишка управления зависимостями в Spring Boot?</text>
+    <allowedMistakes checkedUnnecessary="0" notCheckedNecessary="0" />
+    <item id="1" isCorrect="false">Фреймворк анализирует зависимости и устраняет конфиклиты при автоматическом запуске.</item>
+    <item id="2" isCorrect="false">Фреймворк анализирует зависимости и устраняет конфиклиты в реальном времени.</item>
+    <item id="3" isCorrect="false">Фреймворк анализирует зависимости, синхронизирует их в одном файле и устраняет конфиклиты при автоматическом запуске.</item>
+    <item id="4" isCorrect="true">Фреймворк анализирует зависимости, синхронизирует их в одном файле и устраняет конфиклиты в реальном времени.</item>
+  </question.choice>
+</slide.quiz>
