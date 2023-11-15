@@ -1,0 +1,59 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<slide.quiz xmlns="https://ulearn.me/schema/v2" title="Выбор системы сборки" id="46d2bf95-9fc7-4c99-9ac6-6e096146fcc4">
+    <markdown>
+        # Maven и Gradle?
+        С давних пор для создания приложений на Java имелось множество разных систем сборки. Многие утратили свою популярность и перестали использоваться разработчиками.
+        В итоге сообществу приглянулись две основных системы: Maven и Gradle. Spring Boot поддерживает каждую из них.
+        ## Apache Maven
+        Maven — один из самых популярных и надежных вариантов системы сборки. Она была создана в 2002 году разработчиками из Apache Software Foundation, как подпроект, а уже через 2 года в 2004 появилась первая версия Maven 1.0.
+
+        Она использует декларированный подход, что концептуально проще альтернативных подходов, которые существовали тогда и сейчас: достаточно просто создать файл `pom.xml` в формате XML и указать в нем нужные зависимости и плагины.
+        В команде `mvn` можно указать «фазу» завершения, которая выполняет нужную задачу, например, компиляции, удаления результатов предыдущего выполнения, упаковки, выполнения приложения и т. д.:
+        ```xml
+        &lt;?xml version="1.0" encoding="UTF-8"?>
+        &lt;project xmlns="http://maven.apache.org/POM/4.0.0"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+            &lt;modelVersion>4.0.0&lt;/modelVersion>
+            &lt;parent>
+                &lt;groupId>org.springframework.boot&lt;/groupId>
+                &lt;artifactId>spring-boot-starter-parent&lt;/artifactId>
+                &lt;version>2.4.0&lt;/version>
+                &lt;relativePath/> <!-- Поиск родительского узла в репозитории -->
+            &lt;/parent>
+            &lt;groupId>com.example&lt;/groupId>
+            &lt;artifactId>demo&lt;/artifactId>
+            &lt;version>0.0.1-SNAPSHOT&lt;/version>
+            &lt;name>demo&lt;/name>
+            &lt;description>Демонстрационный проект для Spring Boot&lt;/description>
+            &lt;properties>
+                &lt;java.version>11&lt;/java.version>
+            &lt;/properties>
+            &lt;dependencies>
+                &lt;dependency>
+                    &lt;groupId>org.springframework.boot&lt;/groupId>
+                    &lt;artifactId>spring-boot-starter&lt;/artifactId>
+                &lt;/dependency>
+                &lt;dependency>
+                    &lt;groupId>org.springframework.boot&lt;/groupId>
+                    &lt;artifactId>spring-boot-starter-test&lt;/artifactId>
+                    &lt;scope>test&lt;/scope>
+                &lt;/dependency>
+            &lt;/dependencies>
+            &lt;build>
+                &lt;plugins>
+                    &lt;plugin>
+                        &lt;groupId>org.springframework.boot&lt;/groupId>
+                        &lt;artifactId>spring-boot-maven-plugin&lt;/artifactId>
+                    &lt;/plugin>
+                &lt;/plugins>
+            &lt;/build>
+        &lt;/project>
+        ```
+        Помимо этого, Maven может создавать определенную структуру проекта по соглашению.
+        Заранее не рекомендуем слишком отклоняться от этой структуры, в противном случае Вам придется противостоять утилите сборки, — скажем сразу, это заведомо провальная затея.
+        В большинстве случаев структура Maven, определяемая соглашениям, отлично подходит, так что обычно разработчикам не имеет смысла ее менять. На рисунке ниже(Рис. 1) показано приложение Spring Boot с типичной структурой проекта Maven.
+        ![](U003_Tools_For_Work/pictures/pic_1.png "Рис. 1")
+        Иногда при использовании Maven разработчику может в какой-то момент показаться, что соглашения и/или подход с жесткой структурой слишком ограничивают его, на такой случай существует еще одна система автоматизированной сборки Gradle.
+    </markdown>
+</slide.quiz>

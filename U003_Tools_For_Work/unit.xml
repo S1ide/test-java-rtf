@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<unit xmlns="https://ulearn.me/schema/v2" title="Инструменты для работы" id="5869184a-c412-4bd8-b387-35d88ff9521c" url="tools">
+    <slides>
+        <add>S*.xml</add>
+    </slides>
+</unit>
