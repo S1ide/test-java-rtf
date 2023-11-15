@@ -14,7 +14,7 @@
         кофе в виде List объектов Coffee. В качестве высокоуровневого интерфейса для типа переменной-
         члена выбираем List, но в действительности присваиваем для использования внутри класса
         RestApiDemoController пустой ArrayList:
-        ```
+        ```java
         @RestController
         class RestApiDemoController {
             private List&lt;Coffee> coffees = new ArrayList&lt;>();
@@ -29,7 +29,7 @@
         Чтобы убедиться, что все работает как надо, не повредит иметь некоторые данные для
         извлечения. В коде ниже написан конструктор класса RestApiDemoController, с добавлением кода
         для заполнения списка видов кофе при создании объекта:
-        ```
+        ```java
         @RestController
         class RestApiDemoController {
             private List&lt;Coffee> coffees = new ArrayList&lt;>();
@@ -49,7 +49,7 @@
         для этого API обеспечит любой итерируемый тип, для этого воспользуемся ``Iterable&lt;Coffee>``.
 
         Используем @RequestMapping для получения (GET) списка видов кофе:
-        ```
+        ```java
         @RestController
         class RestApiDemoController {
             private List&lt;Coffee> coffees = new ArrayList&lt;>();
@@ -80,7 +80,7 @@
         Также мы можем упростить код с помощью @GetMapping. Эта аннотация допускает только
         запросы типа GET, это позволяет указать только путь (без path =, так как никакого разрешения
         конфликтов параметров не требуется), сокращая код.
-        ```
+        ```java
         @GetMapping("/coffees")
         Iterable&lt;Coffee> getCoffees() {
             return coffees;
@@ -97,7 +97,7 @@
         Все эти аннотации можно применять как на уровне класса, так и метода. Если добавить аннотации
         @RequestMapping в RestApiDemoController и его метод getCoffees(), как показано ниже, реакция
         приложения будет такая же, как и предыдущем коде:
-        ```
+        ```java
         @RestController
         @RequestMapping("/")
         class RestApiDemoController {
@@ -130,7 +130,7 @@
         В цикле метод проходится по видам кофе и при обнаружении соответствия - возвращает
         заполненный объект ``Optional&lt;Coffee>``, а если заданный id отсутствует - возвращается пустой объект
         ``Optional&lt;Coffee>``.
-        ```
+        ```java
         @GetMapping("/coffees/{id}")
         Optional&lt;Coffee> getCoffeeById(@PathVariable String id) {
             for (Coffee c: coffees) {

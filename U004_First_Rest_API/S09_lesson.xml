@@ -11,7 +11,7 @@
 
         Ищется вид кофе с указанным идентификатором, если найден — обновляется. Если в списке его
         нет, то создается:
-        ```
+        ```java
         @PutMapping("/coffees/{id}")
         Coffee putCoffee(@PathVariable String id, @RequestBody Coffee coffee) {
             int coffeeIndex = -1;

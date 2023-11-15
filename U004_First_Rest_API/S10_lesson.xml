@@ -10,7 +10,7 @@
         удаляет этот вид из списка с помощью метода removeIf интерфейса Collection(Родительского для
         List). Метод removeIf получает предикат Predicate, в следствие чего можно передать лямбда-
         выражение, возвращающее True для удаляемого вида кофе.
-        ```
+        ```java
         @DeleteMapping("/coffees/{id}")
         void deleteCoffee(@PathVariable String id) {
             coffees.removeIf(c -> c.getId().equals(id));

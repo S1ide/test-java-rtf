@@ -12,7 +12,7 @@
         Сервис получает информацию об указанном кофе в виде объекта Coffee и добавляет его в список
         видов кофе. А потом возвращает объект Coffee, автоматически демаршалируемый Spring Boot в
         формат JSON (по умолчанию), запрашивающему сервису или приложению:
-        ```
+        ```java
         @PostMapping("/coffees")
         Coffee postCoffee(@RequestBody Coffee coffee) {
             coffees.add(coffee);
