@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<slide id="37db8f56-12e4-461f-bc99-9cc821155429" title="Структура Spring" xmlns="https://ulearn.me/schema/v2">
+<slide id="7eab05c7-1c68-4e23-b181-0aca1c78e267" title="Структура Spring" xmlns="https://ulearn.me/schema/v2">
     <markdown>
         ## Структура Spring
         Spring состоит из целого ряда небольших фреймворков, каждый из которых выполняет какую-то свою работу. Модульная структура позволяет подключать только те модули, что нам нужны для нашего приложения.
