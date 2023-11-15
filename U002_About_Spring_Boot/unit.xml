@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<unit xmlns="https://ulearn.me/schema/v2" title="База данных" id="27fef7e5-5026-4966-8c16-9684fcf9aa8d" url="database">
+<unit xmlns="https://ulearn.me/schema/v2" title="О Spring Boot" id="27fef7e5-5026-4966-8c16-9684fcf9aa8d" url="about">
     <slides>
         <add>S*.xml</add>
     </slides>
