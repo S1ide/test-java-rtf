@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<slide.quiz xmlns="https://ulearn.me/schema/v2" title="Продолжаем рассматривать системы" id="c41b95f1-bf7e-421a-b720-8b2c2a7681dc">
+<slide xmlns="https://ulearn.me/schema/v2" title="Продолжаем рассматривать системы" id="c41b95f1-bf7e-421a-b720-8b2c2a7681dc">
     <markdown>
         ## Gradle
         Gradle — еще одна популярная утилита для сборки проектов JVM.
@@ -37,4 +37,4 @@
         + обход компиляции для Java (но при условии, если никаких изменений в код не внесено);
         + специальный демон для компиляции проекта.
     </markdown>
-</slide.quiz>
+</slide>

@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<slide.quiz xmlns="https://ulearn.me/schema/v2" title="Spring Initializr" id="9a902a6f-3c3b-4366-8fa6-7c658deafbb1">
+<slide xmlns="https://ulearn.me/schema/v2" title="Spring Initializr" id="9a902a6f-3c3b-4366-8fa6-7c658deafbb1">
     <markdown>
         # Spring Initializr
         Spring Initializr(по URL, start. spring.io) – с него начинается создание приложений Spring Boot, доступ к которому можно получить из «мастеров» создания
@@ -24,4 +24,4 @@
         Когда вы начинаете вносить изменения - результаты генерации кода варьируются и мешают. Initializr генерирует структуру проекта, в том числе файл сборки с зависимостями,
         а это сильно помогает в написании кода, необходимого для использования автоконфигурации Spring Boot.
     </markdown>
-</slide.quiz>
+</slide>

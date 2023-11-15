@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<slide.quiz xmlns="https://ulearn.me/schema/v2" title="Прогулка по функции main()" id="b9cd8679-52f9-47ad-bba9-1d3974a75ed1">
+<slide xmlns="https://ulearn.me/schema/v2" title="Прогулка по функции main()" id="b9cd8679-52f9-47ad-bba9-1d3974a75ed1">
     <markdown>
         # Прогулка по функции main()
         В чем же различия проекта Spring Boot (Рис. 5) и стандартного проекта приложения Java?
@@ -24,4 +24,4 @@
 
         *Увидимся в следующих темах!*
     </markdown>
-</slide.quiz>
+</slide>

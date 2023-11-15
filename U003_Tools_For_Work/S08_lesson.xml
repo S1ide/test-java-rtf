@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<slide.quiz xmlns="https://ulearn.me/schema/v2" title="Работа в интегрированных средах разработки" id="b85261a5-0f0e-4f9d-9eaa-fa80f09720ea">
+<slide xmlns="https://ulearn.me/schema/v2" title="Работа в интегрированных средах разработки" id="b85261a5-0f0e-4f9d-9eaa-fa80f09720ea">
     <markdown>
         # Работа в интегрированных средах разработки
         Для написания приложения существуют три основные интегрированные среды разработки – IDE: Apache NetBeans, Eclipse и IntelliJ IDEA(Есть два варианта: Community Edition (CE) и Ultimate
@@ -12,4 +12,4 @@
 
         *Многие IDE/редакторы дают возможность создавать сокращенные формы команд командной строки, с их помощью можно запускать и загружать проект с помощью этой команды.*
     </markdown>
-</slide.quiz>
+</slide>

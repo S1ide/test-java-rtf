@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<slide.quiz xmlns="https://ulearn.me/schema/v2" title="Выбираем инструменты и приступаем к работе" id="6d21d1c2-7dff-4c94-baa6-a8e38ceb5146">
+<slide xmlns="https://ulearn.me/schema/v2" title="Выбираем инструменты и приступаем к работе" id="6d21d1c2-7dff-4c94-baa6-a8e38ceb5146">
     <markdown>
         # Выбираем инструменты и приступаем к работе
         Вот мы уже подбираемся к созданию вашего первого приложения Spring Boot. Но перед этим давайте еще поговорим об инструментарии.
@@ -8,4 +8,4 @@
 
         И первое с чего мы начнем, это системы сборки.
     </markdown>
-</slide.quiz>
+</slide>
