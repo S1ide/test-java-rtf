@@ -1,0 +1,26 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<slide.exercise xmlns="https://ulearn.me/schema/v2" title="Контроллер" id="82fd01e3-f518-4f96-855f-438ae218fac4">
+    <scoring group="homework" passedTestsScore="1" codeReviewScore="4"/>
+    <markdown>
+        Необходимо написать контроллер.
+
+        Контроллер должен обрабатывать следующие запросы:
+        - GET /games - Вернуть все игры
+        - GET /games/id - Вернуть игру по id
+        - POST /games - Записать игру в БД
+        - PUT /games/id - Изменить игру по id
+        - DELETE /games/id - Удалить игру из БД по id
+    </markdown>
+    <exercise.universal type="check-exit-code" exerciseDirName="Exercise" noStudentZip="true">
+        <checkForPlagiarism>true</checkForPlagiarism>
+        <hideSolutions>true</hideSolutions>
+        <includePathForChecker>./Exercise/.mvn/</includePathForChecker>
+        <hideExpectedOutput>false</hideExpectedOutput>
+        <userCodeFile>./src/main/java/me/ulearn/springboot/controller/GameController.java</userCodeFile>
+        <dockerImageName>java-pg-sandbox</dockerImageName>
+        <timeLimit>30</timeLimit>
+        <interpretNonJsonOutputAs>CE</interpretNonJsonOutputAs>
+        <run>mvn clean --s ./.mvn/settings.xml package -DskipTests=true; java -jar ./target/springboot-0.0.1-SNAPSHOT.jar</run>
+        <region>Task</region>
+    </exercise.universal>
+</slide.exercise>

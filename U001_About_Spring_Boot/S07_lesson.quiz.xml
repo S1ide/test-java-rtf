@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<slide.quiz xmlns="https://ulearn.me/schema/v2" title="Контрольный вопрос" id="0498502a-f30f-4c2e-86d5-450a43416090">
+<slide.quiz xmlns="https://ulearn.me/schema/v2" title="Контрольный вопрос" id="23cf7a8e-7304-4c86-bfee-1235fcb329c1">
   <scoring manualCheck="false" tries="2"/>
   <question.choice id="compileRun" multiple="false" shuffle="true" maxScore="1">
     <text>Как реализуется фишка управления зависимостями в Spring Boot?</text>
