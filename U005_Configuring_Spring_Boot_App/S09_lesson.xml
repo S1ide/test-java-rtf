@@ -1,0 +1,85 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<slide xmlns="https://ulearn.me/schema/v2" title="Лучше учитываем среду приложения с помощью Actuator" id="7faed9c9-3528-466b-9cf3-d300bf9587fc">
+    <markdown>
+        Многие разработчики считают, что знают все о текущей среде или состоянии приложения, когда
+        его поведение не соответствует ожидаемому. Первый шаг — *проверить все допущения.*
+
+        ![](https://i.imgur.com/79Wbrl0.png "Рис. 17")
+
+        Это очень важное действие, особенно для кода, поведение которого зависит от входных данных.
+        Actuator упрощает эту задачу.
+
+        При запросе к конечной точке `/actuator/env` приложения возвращается вся информация о среде.
+        Ниже часть результата такого запроса, отображающая лишь текущий набор свойств приложения:
+
+        ```
+        {
+            "name": "Config resource 'classpath:/application.properties' via location
+             'optional:classpath:/'",
+            "properties": {
+                "droid.description": {
+                    "origin": "class path resource [application.properties] - 5:19",
+                    "value": "Small, rolling android. Probably doesn't drink coffee."
+                },
+                "droid.id": {
+                    "origin": "class path resource [application.properties] - 4:10",
+                    "value": "BB-8"
+                },
+                "greeting.coffee": {
+                    "origin": "class path resource [application.properties] - 2:17",
+                    "value": "Dakota is drinking Cafe Cereza"
+                },
+                "greeting.name": {
+                    "origin": "class path resource [application.properties] - 1:15",
+                    "value": "Dakota"
+                },
+                "management.endpoint.health.show-details": {
+                    "origin": "class path resource [application.properties] - 8:41",
+                    "value": "always"
+                },
+                "management.endpoints.web.exposure.include": {
+                    "origin": "class path resource [application.properties] - 7:43",
+                    "value": "*"
+                }
+            }
+        }
+        ```
+
+        Actuator также показывает источники текущих значений всех описанных свойств вплоть до номера
+        строки и столбца, в которых описано значение.
+
+        Что будет, если одно или несколько из этих значений будут переопределены в другом источнике,
+        например во внешней переменной среды или в аргументе командной строки при запуске
+        приложения?
+
+        Для ответа выполним в командной строке каталога приложения команду `mvn clean package`, после
+        чего запустим приложение с помощью команды
+
+        ```
+        java -jar target/sbur-rest-demo-0.0.1-SNAPSHOT.jar --greeting.name=Sertanejo
+        ```
+
+        Выполняя новый запрос к конечной точке `/actuator/env`, видим, что появился новый раздел для
+        аргументов командной строки, включающий одну запись для `greeting.name`:
+
+        ```
+        {
+            "name": "commandLineArgs",
+            "properties": {
+                "greeting.name": {
+                    "value": "Sertanejo"
+                }
+            }
+        }
+        ```
+
+        Из-за старшинства входных данных `Environment` аргументы командной строки должны обладать
+        приоритетом перед набором значений из файла `application.properties`.
+
+        Запрос к конечной точке `/greeting` возвращает `Sertanejo`, и ответ на запрос к конечной точке
+        `/greeting/coffee` также содержит значение, переопределенное с помощью `SpEL: Sertanejo is
+        drinking Cafe Cereza`.
+
+        Actuator намного упростил поиск ошибочного поведения, управляемого данными.
+    </markdown>
+</slide>

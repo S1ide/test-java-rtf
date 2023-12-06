@@ -1,0 +1,83 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<slide xmlns="https://ulearn.me/schema/v2" title="Отчет об автоконфигурации" id="0385c6cc-f132-437d-8d63-09d9b2b8fb06">
+    <markdown>
+        #### Вспомним о автоконфигурации Spring Boot:
+
+        Она выполняет множество действий: подготавливает компоненты для реализации
+        функциональности приложения, ориентируясь на выбранные возможности, зависимости и
+        имеющийся код. А еще мы имеем возможность переопределения любой части
+        автоконфигурации. Но откуда мы знаем, какие компоненты созданы, а какие — нет и какие
+        условия привели к такому исходу?
+
+        JVM может сгенерировать отчет об автоконфигурации. Для этого нужно воспользоваться флагом
+        debug одним из следующих способов.
+
+        - Выполнить JAR-файл приложения с указанием опции `--debug` — `java` `-jar` `bootapplication.jar`
+        `–debug`.
+        - Выполнить JAR-файл приложения с указанием соответствующего параметра JVM — `java` -
+        `Ddebug=true` `-jar` `bootapplication.jar`.
+        - Добавить `debug=true` в файл `application.properties`приложения.
+        - Выполнить команду `export DEBUG=true` в командной оболочке (Linux или Mac) или
+        добавить ее в среду Windows, после чего выполнить `java -jar / bootapplication.jar`.
+
+        Данные способы используются чаще всего, а все способы добавления утвердительного значения
+        для `debug` в `Environment` приложения, рассмотренные ранее покажут одинаковый результат
+
+        Раздел отчета об автоконфигурации, перечисляющий позитивные соответствия условиям,
+        оцененным как `True` и приведшим к выполнению соответствующего действия, озаглавлен *Positive
+        matches*. Ниже заголовок этого раздела вместе с одним примером позитивного соответствия и
+        вытекающим из него действием автоконфигурации:
+
+        ```
+        ============================
+        CONDITIONS EVALUATION REPORT
+        ============================
+        Positive matches:
+        -----------------
+            DataSourceAutoConfiguration matched:
+                - @ConditionalOnClass found required classes 'javax.sql.DataSource',
+                'org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType'
+                (OnClassCondition)
+        ```
+
+        Данное соответствие условию демонстрирует, что должно произойти.
+
+        Однако не помешает проверить следующее:
+
+        - JPA и H2 включены в число зависимостей приложения;
+        - JPA работает с SQL-источниками данных;
+        - H2 — встраиваемая база данных;
+        - были найдены классы, поддерживающие встраиваемые SQL-источники данных.
+
+        В итоге вызывается `DataSourceAutoConfiguration`.
+
+        А в разделе *Negative matches* («Негативные соответствия условиям») приводятся действия,
+        которые автоконфигурация не предприняла, а также указаны причины:
+
+        ```
+        Negative matches:
+        -----------------
+            ActiveMQAutoConfiguration:
+                Did not match:
+                    - @ConditionalOnClass did not find required class
+                        'javax.jms.ConnectionFactory' (OnClassCondition)
+        ```
+
+        В этой ситуации случае `ActiveMQAutoConfiguration` не выполнялась, так как при запуске наше
+        приложение не нашло класс `JMS ConnectionFactory`.
+
+        Будет полезно посмотреть в раздел `Unconditional classes` — перечень классов, создаваемых без
+        проверки каких-либо условий.
+
+        ```
+        Unconditional classes:
+        ----------------------
+            org.springframework.boot.autoconfigure.context
+                .ConfigurationPropertiesAutoConfiguration
+        ```
+
+        Экземпляр `ConfigurationPropertiesAutoConfiguration` создается всегда и предназначен для
+        управления всеми объектами `ConfigurationProperties`, которые были созданы в приложении Spring
+        Boot и на которые ссылается его код. Это свойственная часть любого приложения Spring Boot.
+    </markdown>
+</slide>

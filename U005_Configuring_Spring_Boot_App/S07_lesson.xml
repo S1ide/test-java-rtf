@@ -1,0 +1,205 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<slide xmlns="https://ulearn.me/schema/v2" title="Actuator (актуатор)" id="1f2bb998-b9fd-4ffd-aa5f-caa39f08cab8">
+    <markdown>
+        *Актуатор* — это исполнительный элемент, механическое устройство для перемещения чего-либо
+        или управления чем-либо.
+
+        #### История:
+
+        Изначальная версия Spring Boot Actuator стала общедоступной версией (General Availability, GA) в
+        2014 году, она давала возможность глубже анализировать производственные приложения Spring
+        Boot. Позволяя выполнять мониторинг и управлять работающими приложениями через конечные
+        точки HTTP или расширения Java для управления (Java Management Extensions, JMX), Actuator
+        охватывал и открывал для пользователей все возможности Spring Boot уровня продакшена.
+
+        Сейчас модуль Actuator представляет данные многих ведущих систем мониторинга через
+        единообразный интерфейс с помощью инструментальной библиотеки Micrometer подобно тому,
+        как SLF4J работает с различными механизмами ведения журнала. Это значительно расширяет
+        спектр того, что можно интегрировать, отслеживать и отображать с помощью Actuator в любом
+        приложении Spring Boot.
+
+        Добавим еще одну зависимость в раздел зависимостей файла `pom.xml` текущего проекта.
+        Зависимость `spring-boot-starter-actuator` предоставляет все необходимые возможности, включая
+        для этого сам модуль Actuator, библиотеку Micrometer и средства автоконфигурации, это
+        позволяет ей с легкостью встраиваться в приложения Spring Boot:
+
+        ```
+        &lt;dependencies>
+            ... (для краткости прочие зависимости опущены)
+            &lt;dependency>
+                &lt;groupId>org.springframework.boot&lt;/groupId>
+                &lt;artifactId>spring-boot-starter-actuator&lt;/artifactId>
+            &lt;/dependency>
+        &lt;/dependencies>
+        ```
+
+        Перезапустим приложение, перед этим обновив/импортировав зависимости. Посмотрим, какую
+        информацию предоставляет Actuator по умолчанию, обратившись к его основной конечной точке.
+
+        *Вся информация актуатора сгруппирована по умолчанию в одной конечной точке
+        `/actuator`, но такое поведение можно менять с помощью настроек.*
+
+        По началу, вы увидите не так много информации, однако подобная лаконичность — умышленная.
+
+        Следуя политике «безопасность по умолчанию» `Spring Security`, автоконфигурация модуля
+        Actuator предоставляет пользователям доступ к очень немногим ответам из разделов `health` и `info`
+        — на самом деле по умолчанию из раздела `info` вообще ничего не доступно. Поэтому изначально
+        можно видеть практически только общее состояние приложения.
+
+        ![](https://i.imgur.com/ACiNz0j.png "Рис. 15")
+
+        Однако вы можете создать механизмы для управления доступом к различным потокам данных
+        Actuator. Есть также быстрые, согласованные и простые механизмы.
+
+        Можно легко настраивать Actuator, задавая с помощью свойств множества
+        включаемых/исключаемых конечных точек. Мы будем указывать включаемые, для чего добавим
+        в файл `application.properties` следующее:
+
+        ```
+        management.endpoints.web.exposure.include=env, info, health
+        ```
+
+        Здесь мы указали приложению и модулю Actuator открыть для доступа только конечные точки
+        `/actuator/env`, `/actuator/info` и `/actuator/health`, а также все их дочерние конечные точки.
+        В результате, мы видим полученный после перезапуска приложения и выполнения запроса к
+        конечной точке `/actuator`.
+
+        ![](https://i.imgur.com/YjqDt6Y.png "Рис. 16")
+
+        Если вы хотите увидеть все возможности Actuator по умолчанию, то можете полностью отключить
+        безопасность Для этого укажите подстановочный знак в вышеупомянутой настройке из файла
+        `application.properties`, но мы сделаем это только для демонстрации:
+
+        ```
+        management.endpoints.web.exposure.include=*
+        ```
+
+        *Еще раз подчеркнем этот важнейший момент: механизмы безопасности для
+        конфиденциальных данных следует отключать лишь для демонстрации или проверки.*
+        ***Никогда не отключайте механизмы безопасности для приложений в продакшене.***
+
+        При запуске приложения Actuator выводит количество конечных точек, открываемых в текущий
+        момент, а также корневой путь для доступа к ним. Эта информация служит удобным
+        напоминанием или предостережением, позволяющим перед развертыванием приложения
+        быстро визуально проверить, что открыто не больше конечных точек, чем нужно:
+
+        ```
+        INFO 22115 --- [ main] o.s.b.a.e.web.EndpointLinksResolver :
+            Exposing 13 endpoint(s) beneath base path '/actuator'
+        ```
+
+        Чтобы просмотреть полный список всех доступных через Actuator конечных
+        точек, выполните запрос к указанному корневому пути Actuator:
+
+        ```
+        mheckler-a01 :: ~/dev " http :8080/actuator
+        HTTP/1.1 200
+        Connection: keep-alive
+        Content-Type: application/vnd.spring-boot.actuator.v3+json
+        Date: Fri, 27 Nov 2020 17:43:27 GMT
+        Keep-Alive: timeout=60
+        Transfer-Encoding: chunked
+        {
+            "_links": {
+                "beans": {
+                    "href": "http://localhost:8080/actuator/beans",
+                    "templated": false
+                },
+                "caches": {
+                    "href": "http://localhost:8080/actuator/caches",
+                    "templated": false
+                },
+                "caches-cache": {
+                    "href": "http://localhost:8080/actuator/caches/{cache}",
+                    "templated": true
+                },
+                "conditions": {
+                    "href": "http://localhost:8080/actuator/conditions",
+                    "templated": false
+                },
+                "configprops": {
+                    "href": "http://localhost:8080/actuator/configprops",
+                    "templated": false
+                },
+                "env": {
+                    "href": "http://localhost:8080/actuator/env",
+                    "templated": false
+                },
+                "env-toMatch": {
+                    "href": "http://localhost:8080/actuator/env/{toMatch}",
+                    "templated": true
+                },
+                "health": {
+                    "href": "http://localhost:8080/actuator/health",
+                    "templated": false
+                },
+                "health-path": {
+                    "href": "http://localhost:8080/actuator/health/{*path}",
+                    "templated": true
+                },
+                "heapdump": {
+                    "href": "http://localhost:8080/actuator/heapdump",
+                    "templated": false
+                },
+                "info": {
+                    "href": "http://localhost:8080/actuator/info",
+                    "templated": false
+                },
+                "loggers": {
+                    "href": "http://localhost:8080/actuator/loggers",
+                    "templated": false
+                },
+                "loggers-name": {
+                    "href": "http://localhost:8080/actuator/loggers/{name}",
+                    "templated": true
+                },
+                "mappings": {
+                    "href": "http://localhost:8080/actuator/mappings",
+                    "templated": false
+                },
+                "metrics": {
+                    "href": "http://localhost:8080/actuator/metrics",
+                    "templated": false
+                },
+                "metrics-requiredMetricName": {
+                    "href": "http://localhost:8080/actuator/metrics/{requiredMetricName}",
+                    "templated": true
+                },
+                "scheduledtasks": {
+                    "href": "http://localhost:8080/actuator/scheduledtasks",
+                    "templated": false
+                },
+                "self": {
+                    "href": "http://localhost:8080/actuator",
+                    "templated": false
+                },
+                "threaddump": {
+                    "href": "http://localhost:8080/actuator/threaddump",
+                    "templated": false
+                }
+            }
+        }
+        ```
+
+        Список конечных точек Actuator демонстрирует спектр собранной и доступной для изучения
+        информации, нам интересны следующие:
+
+        - `/actuator/beans` — все создаваемые приложением компоненты Spring;
+        - `/actuator/conditions` — выполняющиеся и невыполняющиеся условия создания
+        компонентов Spring, аналогично обсуждавшемуся ранее отчету о проверенных условиях;
+        - `/actuator/configprops` — все доступные приложению свойства `Environment`;
+        - `/actuator/env` — множество аспектов среды работы приложения, особенно удобно здесь
+        смотреть источники отдельных значений `configprop`;
+        - `/actuator/health` — информация о состоянии приложения (основная или расширенная в
+        зависимости от настроек);
+        - `/actuator/heapdump` — инициирует дамп «кучи» для целей отладки и/или анализа;
+        - `/actuator/loggers` — уровни журналирования для отдельных компонентов;
+        - `/actuator/mappings` — все сопоставления конечных точек и сопутствующая информация;
+        - `/actuator/metrics` — фиксируемые приложением показатели;
+        - `/actuator/threaddump` — инициирует дамп потоков выполнения для целей отладки и/или
+        анализа.
+
+        Эти и все прочие предварительно настроенные конечные точки Actuator всегда под рукой, и при
+        необходимости обращаться к ним для получения информации очень просто.
+    </markdown>
+</slide>

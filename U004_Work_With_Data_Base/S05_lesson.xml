@@ -1,0 +1,129 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<slide xmlns="https://ulearn.me/schema/v2" title="Spring в действии" id="40726efc-9562-4616-85c7-5375440a2283">
+    <markdown>
+        Применим репозиторий в деле.
+
+        Сначала рассмотрим автосвязывание/внедрение компонента репозитория с
+        `RestApiDemoController`, чтобы контроллер мог обращаться к нему при получении запросов через
+        внешний `API`.
+
+        ![](https://i.imgur.com/aLxFHcW.png "Рис. 4")
+
+        Для начала объявляем переменную-член класса:
+        ```java
+        private final CoffeeRepository coffeeRepository;
+        ```
+        Теперь добавляем ее в качестве параметра конструктора:
+        ```java
+        public RestApiDemoController(CoffeeRepository coffeeRepository){}
+        ```
+        Репозиторий готов, удаляем переменную-член ``List&lt;Coffee&gt;`` и меняем код изначального
+        заполнения этого списка в конструкторе на сохранение этих же видов кофе в репозиторий (см.
+        Рис. 4).
+
+        Удаление переменной `coffees` сделало все ссылки на нее неразрешимыми символами, поэтому
+        следующим шагом — заменим их соответствующими операциями обмена данными с
+        репозиторием.
+
+        ![](https://i.imgur.com/O5KdRz7.png "Рис. 5")
+
+        Начнем с `getCoffees()` — это простой метод без параметров для извлечения всех видов кофе. При
+        использовании встроенного метода `findAll()` интерфейса `CrudRepository` можно не менять тип
+        возвращаемого значения `getCoffees()`, так как он возвращает также тип `Iterable`. Достаточно просто
+        вызвать метод `coffeeRepository.findAll()` и вернуть результат его выполнения:
+        ```java
+        @GetMapping
+        Iterable&lt;Coffee> getCoffees() {
+            return coffeeRepository.findAll();
+        }
+        ```
+        Рефакторинг метода `getCoffeeById()` показывает, насколько функциональность предоставляемая
+        репозиториями упрощает ваш код. Не надо искать вручную нужный `id` — метод `findById()`
+        интерфейса `CrudRepository` сделает это за вас. А поскольку метод `findById()` возвращает тип
+        `Optional`, никаких изменений в сигнатуру нашего метода вносить не требуется:
+        ```java
+        @GetMapping("/{id}")
+        Optional&lt;Coffee> getCoffeeById(@PathVariable String id) {
+            return coffeeRepository.findById(id);
+        }
+        ```
+        Преобразование метода `postCoffee()` для использования репозитория тоже довольно легкое:
+        ```java
+        @PostMapping
+        Coffee postCoffee(@RequestBody Coffee coffee) {
+            return coffeeRepository.save(coffee);
+        }
+        ```
+        Метод `postCoffee()` демонстрирует, как функциональность `CrudRepository` сокращает код. Чтобы
+        определить, новый это `Coffee` или уже существующий, и вернуть соответствующий код состояния
+        HTTP вместе с сохраненным объектом `Coffee`, воспользуемся встроенным методом `existsById()`
+        репозитория:
+        ```java
+        @PutMapping("/{id}")
+        ResponseEntity&lt;Coffee> putCoffee(@PathVariable String id, @RequestBody Coffee coffee) {
+            return (!coffeeRepository.existsById(id))
+                ? new ResponseEntity&lt;>(coffeeRepository.save(coffee),
+                        HttpStatus.CREATED)
+                : new ResponseEntity&lt;>(coffeeRepository.save(coffee), HttpStatus.OK);
+        }
+        ```
+        Также мы модифицировали метод `deleteCoffee()`, с помощью встроенного метода `deleteById()`
+        интерфейса `CrudRepository`:
+        ```java
+        @DeleteMapping("/{id}")
+        void deleteCoffee(@PathVariable String id) {
+            coffeeRepository.deleteById(id);
+        }
+        ```
+        Применяя компонент репозитория, который был создан с помощью гибкого `API CrudRepository`,
+        мы упрощаем код `RestApiDemoController` и делаем его более понятным:
+        ```java
+        @RestController
+        @RequestMapping("/coffees")
+        class RestApiDemoController {
+            private final CoffeeRepository coffeeRepository;
+
+            public RestApiDemoController(CoffeeRepository coffeeRepository) {
+                this.coffeeRepository = coffeeRepository;
+
+                this.coffeeRepository.saveAll(List.of(
+                        new Coffee("Café Cereza"),
+                        new Coffee("Café Ganador"),
+                        new Coffee("Café Lareño"),
+                        new Coffee("Café Três Pontas")
+                ));
+            }
+
+            @GetMapping
+            Iterable&lt;Coffee> getCoffees() {
+                return coffeeRepository.findAll();
+            }
+            @GetMapping("/{id}")
+            Optional&lt;Coffee> getCoffeeById(@PathVariable String id) {
+                return coffeeRepository.findById(id);
+            }
+            @PostMapping
+            Coffee postCoffee(@RequestBody Coffee coffee) {
+                return coffeeRepository.save(coffee);
+            }
+            @PutMapping("/{id}")
+            ResponseEntity&lt;Coffee> putCoffee(@PathVariable String id,
+                                             @RequestBody Coffee coffee) {
+
+                return (!coffeeRepository.existsById(id))
+                    ? new ResponseEntity&lt;>(coffeeRepository.save(coffee),
+                     HttpStatus.CREATED)
+                    : new ResponseEntity&lt;>(coffeeRepository.save(coffee),
+                        HttpStatus.OK);
+            }
+
+            @DeleteMapping("/{id}")
+            void deleteCoffee(@PathVariable String id) {
+                coffeeRepository.deleteById(id);
+            }
+        }
+        ```
+        Нам осталось удостовериться, что приложение работает так, как мы задумали и его внешняя
+        функциональность не нарушилась.
+    </markdown>
+</slide>

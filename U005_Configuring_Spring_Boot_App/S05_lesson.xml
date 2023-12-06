@@ -1,0 +1,114 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<slide xmlns="https://ulearn.me/schema/v2" title="Возможные сторонние решения" id="e168d8d4-0001-4e08-b314-547f65d4c847">
+    <markdown>
+        `ConfigurationProperties` дает возможность оборачивать сторонние компоненты и включать их
+        свойства в объект `Environment` приложения.
+
+        Создадим объект POJO для имитации включаемого в приложение компонента.
+
+        *В типичных сценариях использования, когда эта возможность приносит наибольшую пользу,
+        имеет смысл добавить в проект внешнюю зависимость и обратиться к документации
+        проекта, чтобы найти класс для создания компонента `Spring` вместо создания его вручную.*
+
+        Создадим имитацию стороннего компонента `Droid` с двумя свойствами, `id` и `description`, и
+        соответствующими им методами доступа и изменения:
+
+        ```
+        class Droid {
+            private String id, description;
+
+            public String getId() {
+                return id;
+            }
+
+            public void setId(String id) {
+                this.id = id;
+            }
+
+            public String getDescription() {
+                return description;
+            }
+
+            public void setDescription(String description) {
+                this.description = description;
+            }
+        }
+        ```
+
+        Далее создадим экземпляр компонента как компонент `Spring`.
+
+        Компоненты `Spring` можно получать из описанных объектов POJO несколькими способами. Наш
+        способ— создать внутри снабженного аннотацией `@Configuration` класса метод, имеющий
+        аннотацию `@Bean`, либо непосредственно, либо с помощью метааннотации.
+
+        Одна из метааннотаций, включающих в свое определение `@Configuration`, —
+        `@SpringBootApplication`, указанная нами для класса main приложения. Поэтому чаще всего туда
+        помещают методы создания компонентов.
+
+        *В IntelliJ и большинстве других IDE и продвинутых текстовых редакторов с хорошей
+        поддержкой `Spring` можно разворачивать метааннотации `Spring`, изучая вложенные внутрь
+        них аннотации. В IntelliJ развернуть аннотацию можно, нажав `Cmd` и щелкнув левой
+        кнопкой мыши (на MacOS) (вWindows — Ctrl+Щелчок левой кнопкой мыши). Аннотация
+        `@SpringBootApplication` включает аннотацию `@SpringBootConfiguration`, в свою очередь,
+        включающую `@Configuration`.*
+
+        Ниже показан метод создания компонента, необходимая аннотация `@ConfigurationProperties` и
+        параметр `prefix`, указывающий, что нужно включить свойства `Droid` в `Environment`, на верхнем
+        уровне группировки свойств `droid`:
+
+        ```
+        @SpringBootApplication
+        @ConfigurationPropertiesScan
+        public class SburRestDemoApplication {
+
+            public static void main(String[] args) {
+                SpringApplication.run(SburRestDemoApplication.class, args);
+            }
+
+            @Bean
+            @ConfigurationProperties(prefix = "droid")
+            Droid createDroid() {
+                return new Droid();
+            }
+        }
+        ```
+
+        Соберем проект заново, чтобы процессор конфигурации смог обнаружить свойства,
+        предоставляемые этим новым источником свойств конфигурации. После вернемся к файлу
+        `application.properties` и видим, что оба свойства `droid` теперь отображаются полностью, с
+        информацией о типе
+
+        ![](https://i.imgur.com/lkKZxsw.png "Рис. 12")
+
+        Присвоим `droid.id`и `droid.description` значения в качестве значений по умолчанию.
+
+        *Рекомендация: делать это для всех свойств `Environment`, даже полученных со стороны.*
+
+        ![](https://i.imgur.com/8emS9Rf.png "Рис. 13")
+
+        Создадим простой класс с аннотацией `@RestController`, включающий один метод для того, чтобы
+        проверить, что все касающееся свойств `Droid` работает так, как задумано.
+
+        ```
+        @GetMapping:
+
+        @RestController
+        @RequestMapping("/droid")
+        class DroidController {
+            private final Droid droid;
+            public DroidController(Droid droid) {
+                this.droid = droid;
+            }
+
+            @GetMapping
+            Droid getDroid() {
+                return droid;
+            }
+        }
+        ```
+
+        После сборки и запуска проекта выполняем запрос к новой конечной точке `/droid`. Все работает!
+
+        ![](https://i.imgur.com/hadln13.png "Рис. 14")
+    </markdown>
+</slide>

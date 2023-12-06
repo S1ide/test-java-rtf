@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<unit xmlns="https://ulearn.me/schema/v2" title="Работа с базой данных" id="31c73657-0fb5-487a-a10d-08c87350d7f5" url="workWithDataBase">
+    <slides>
+        <add>S*.xml</add>
+    </slides>
+</unit>

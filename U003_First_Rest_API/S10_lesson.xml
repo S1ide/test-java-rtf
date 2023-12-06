@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<slide xmlns="https://ulearn.me/schema/v2" title="DELETE" id="77761de4-03ba-44d0-b425-63174d96d855">
+    <markdown>
+        Запросы `HTTP DELETE` используются для удаления ресурсов.
+
+        Как это работает:
+
+        Создается метод, который принимает идентификатор вида кофе в переменной `@PathVariable` и
+        удаляет этот вид из списка с помощью метода `removeIf` интерфейса C`ollection`(Родительского для
+        `List`). Метод `removeIf` получает предикат `Predicate`, в следствие чего можно передать лямбда-
+        выражение, возвращающее `True` для удаляемого вида кофе.
+        ```java
+        @DeleteMapping("/coffees/{id}")
+        void deleteCoffee(@PathVariable String id) {
+            coffees.removeIf(c -> c.getId().equals(id));
+        }
+        ```
+    </markdown>
+</slide>

@@ -1,0 +1,154 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<slide xmlns="https://ulearn.me/schema/v2" title="@ConfigurationProperties" id="142fff1f-2cb5-4d07-afe9-3ac9d2526010">
+    <markdown>
+        С помощью `@ConfigurationProperties` появляется возможность описывать свойства, группируя
+        связанные между собой, и ссылаться на них либо использовать их типобезопасно и с
+        возможностью проверки с помощью соответствующей утилиты.
+
+        Например, если в файле `application.properties` описано свойство, не используемое в коде, вы
+        увидите, что его название выделено, это даст вам понять, что свойство заведомо не используется.
+        По аналогии, если свойство описано с типом `String`, но связано с переменной экземпляра другого
+        типа, IDE укажет на рассогласование типов.
+
+        Перейдем к практике: начнем с описания POJO, инкапсулирующего нужные нам связанные между
+        собой свойства, в данном случае вышеупомянутые `greeting-name` и `greeting-coffee`. Создадим для
+        них класс `Greeting`:
+
+        ```
+        class Greeting {
+            private String name;
+            private String coffee;
+
+            public String getName() {
+                return name;
+            }
+
+            public void setName(String name) {
+                this.name = name;
+            }
+
+            public String getCoffee() {
+                return coffee;
+            }
+
+            public void setCoffee(String coffee) {
+                this.coffee = coffee;
+            }
+        }
+        ```
+
+        Зарегистрируем класс `Greeting` для управления свойствами конфигурации: добавим аннотацию
+        `@ConfigurationProperties` и укажем `prefix`, который используется для всех свойств из класса
+        `Greeting`. Наша аннотация подготавливает класс к использованию только для свойств
+        конфигурации. Приложение должно знать, что свойства из снабженных подобной аннотацией
+        классов необходимо включать в `Environment` приложения.
+
+        *Посмотрим на выдаваемое сообщение об ошибке.*
+
+        ![](https://i.imgur.com/xNiuuSF.png "Рис. 8")
+
+        Укажем приложению на необходимость обработки классов, снабженных аннотацией
+        `@ConfigurationProperties`, и добавления свойств этих классов в объект `Environment` приложения.
+        Сделаем это с помощью добавления аннотации `@ConfigurationPropertiesScan` к основному классу
+        приложения.
+
+        ```
+        @SpringBootApplication
+        @ConfigurationPropertiesScan
+
+        public class SburRestDemoApplication {
+
+            public static void main(String[] args) {
+                SpringApplication.run(SburRestDemoApplication.class, args);
+            }
+
+        }
+        ```
+
+        Иногда не требуется, чтобы Boot искал снабженные аннотацией `@ConfigurationProperties`
+        классы, в частности при необходимости подключения определенных снабженных
+        аннотацией `@ConfigurationProperties` классов по условию или при создании собственных
+        автоконфигураций. Во всех прочих случаях следует использовать
+        `@ConfigurationPropertiesScan` для поиска и подключения классов с
+        `@ConfigurationProperties` аналогично механизму поиска компонентов Spring Boot.
+        Для генерации метаданных с помощью процессора аннотаций и возможности IDE найти
+        взаимосвязи между снабженными аннотацией `@ConfigurationProperties` классами и
+        соответствующими свойствами, описанными в файле `application.properties`, добавим в файл
+        сборки `pom.xml` проекта зависимость:
+
+        ```
+        &lt;dependency>
+            &lt;groupId>org.springframework.boot&lt;/groupId>
+            &lt;artifactId>spring-boot-configuration-processor&lt;/artifactId>
+            &lt;optional>true&lt;/optional>
+        &lt;/dependency>
+        ```
+
+        *Эту зависимость можно выбрать в Spring Initializr и добавить автоматически на этапе
+        создания проекта.*
+
+        После добавления зависимости процессора конфигурации в файл сборки, чтобы использовать
+        зависимости, их необходимо обновить/повторно импортировать и собрать проект. Для этого
+        откроем меню `Maven` в `IntelliJ` и нажмем кнопку `Reimport` слева вверху.
+
+        *Если соответствующая возможность не отключена, `IntelliJ` отображает над измененным
+        файлом `pom.xml` небольшую кнопку, позволяющую быстро произвести повторный импорт,
+        не открывая меню `Maven`. Наложенную кнопку повторного импорта — маленькую букву m
+        с круговыми стрелками внизу — слева над элементом &lt;groupid> первой зависимости. По
+        завершении повторного импорта она пропадает.*
+
+        ![](https://i.imgur.com/zVPMEui.png "Рис. 9")
+
+        Далее произведем повторную сборку проекта из IDE для включения в него процессора
+        конфигураций.
+        Зададим значения для этих свойств. Возвратимся к файлу `application.properties`: при вводе
+        названия `greeting`, IDE отобразила соответствующие названия свойств
+
+        ![](https://i.imgur.com/puSoS5H.png "Рис. 10")
+
+        Переделаем код, чтобы воспользоваться этими свойствами вместо тех, что мы применяли ранее.
+        Чтобы полностью отказаться от имен собственных переменных-членов `name` и `coffee` класса
+        `GreetingController` вместе с их аннотациями @Value, создадим переменную-член для компонента
+        `Greeting`, который теперь отвечает за свойства `greeting.name` и `greeting.coffee`, и внедрим ее в
+        `GreetingController`.
+
+        ```
+        @RestController
+        @RequestMapping("/greeting")
+        class GreetingController {
+            private final Greeting greeting;
+
+            public GreetingController(Greeting greeting) {
+                this.greeting = greeting;
+            }
+
+            @GetMapping
+            String getGreeting() {
+                return greeting.getName();
+            }
+
+            @GetMapping("/coffee")
+            String getNameAndCoffee() {
+                return greeting.getCoffee();
+            }
+        }
+        ```
+
+        Запустим приложение и выполним запросы к конечным точкам `greeting` и `greeting/coffee`.
+
+        ![](https://i.imgur.com/6XcGkrr.png "Рис. 11")
+
+        Свойства под управлением компонента с аннотацией `@ConfigurationProperties` по-прежнему
+        получают значения от `Environment` и всех его потенциальных источников.
+
+        Единственное отличие от свойств на основе `@Value` — невозможность задавать значение по
+        умолчанию для аннотируемой переменной экземпляра. Но это не большая проблема, так как
+        разумные значения по умолчанию для приложения обычно задаются в файле
+        `application.properties`. При надобности вы можете задать другие значения свойств, относящиеся к
+        конкретным средам развертывания, их можно внести в `Environment` приложения через другие
+        источники, например переменные среды или параметры командной строки.
+
+        В итоге `ConfigurationProperties` обеспечивает соблюдение рекомендуемой практики задания
+        значений свойств по умолчанию.
+    </markdown>
+</slide>

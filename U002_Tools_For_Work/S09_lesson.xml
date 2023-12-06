@@ -1,0 +1,29 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<slide xmlns="https://ulearn.me/schema/v2" title="Прогулка по функции main()" id="b9cd8679-52f9-47ad-bba9-1d3974a75ed1">
+    <markdown>
+        В чем же различия проекта Spring Boot (Рис. 5) и стандартного проекта приложения Java?
+
+        ![](https://i.imgur.com/AJ2HJrD.png "Рис. 5")
+
+        Стандартное приложение Java включает (по умолчанию) пустой метод ``public static void main``. Когда JVM выполняет приложение Java, то ищет этот
+        метод в качестве начальной точки приложения, а при его отсутствии запуск приложения завершается неудачей и выдается сообщение об ошибке:
+        ```
+        Error:
+        Main method not found in class PlainJavaApp, please define the main method as:
+            public static void main(String[] args)
+        or a JavaFX application class must extend javafx.application.Application
+        ```
+        Почему бы не поместить в метод ``main`` класса Java код для выполнения? Spring Boot  делает именно это.
+        **При начальной загрузке Spring Boot проверяет среду, настраивает приложение, создает начальный контекст и запускает приложение. **
+        А делается это с помощью одной аннотации верхнего уровня и одной строке кода (Рис. 6).
+
+        ![](https://i.imgur.com/0OFlUDP.png "Рис. 6")
+
+        ## Краткое содержание:
+        В этой теме были рассмотрены несколько вариантов создания приложений Spring Boot.
+        Мы узнали, что: сборка проектов производится с помощью Maven или Gradle, сам код пишется на Java или Kotlin, проекты создаются в веб-интерфейсе Spring
+        Initializr, работа с проектами Spring Boot осуществляется во множестве разнообразных IDE и текстовых редакторов с поддержкой Spring Boot.
+
+        *Увидимся в следующих темах!*
+    </markdown>
+</slide>

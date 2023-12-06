@@ -1,0 +1,41 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<slide xmlns="https://ulearn.me/schema/v2" title="Продолжаем рассматривать системы" id="f6ba5149-fad2-4d03-b7b5-4b79c20cc531">
+    <markdown>
+        ## Gradle
+        Gradle — еще одна популярная утилита для сборки проектов JVM.
+        Она была впервые выпущена в релиз в 2008 году.
+        Gradle использует направленный ациклический граф для определения порядка выполнения задач, генерирует минималистичный и гибкий файл сборки ``build.gradle`` на основе
+        предметно-ориентированного языка (Domain Specific Language, DSL). Был разработан для расширяемых многопроектных сборок, и поддерживает каскадную модель разработки, определяя,
+        какие компоненты дерева сборки не изменились и какие задачи, зависимые от этих частей, не требуют перезапуска. Вот пример файла сборки для приложения Spring Boot:
+
+        ```
+        plugins {
+            id 'org.springframework.boot' version '2.4.0'
+            id 'io.spring.dependency-management' version '1.0.10.RELEASE'
+            id 'java'
+        }
+
+        group = 'com.example'
+        version = '0.0.1-SNAPSHOT'
+        sourceCompatibility = '11'
+
+        repositories {
+            mavenCentral()
+        }
+
+        dependencies {
+            implementation 'org.springframework.boot:spring-boot-starter'
+            testImplementation 'org.springframework.boot:spring-boot-starter-test'
+        }
+        test {
+            useJUnitPlatform()
+        }
+        ```
+        В качестве DSL Gradle дает возможность выбора только из двух языков, Groovy и Kotlin, но это не все, у Gradle есть
+        еще несколько других возможностей, которые помогают разработчику сократить время сборки проектов, а точнее:
+
+        + инкрементная компиляция классов Java;
+        + обход компиляции для Java (но при условии, если никаких изменений в код не внесено);
+        + специальный демон для компиляции проекта.
+    </markdown>
+</slide>

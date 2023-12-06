@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<unit xmlns="https://ulearn.me/schema/v2" title="Настройка и контроль приложения Spring Boot" id="5d7250a9-3305-491e-85cd-3b175786a0a0" url="configuringSBApp">
+    <slides>
+        <add>S*.xml</add>
+    </slides>
+</unit>
