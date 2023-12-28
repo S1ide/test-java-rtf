@@ -1,21 +1,15 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<slide.exercise xmlns="https://ulearn.me/schema/v2" title="Сущность" id="15275c18-f1c8-40c6-9409-87415c4dbc2c">
+<slide.exercise xmlns="https://ulearn.me/schema/v2" title="Сущность" id="cd8df849-c9fc-476a-b1cd-e710a4720893">
     <scoring group="homework" passedTestsScore="1" codeReviewScore="4"/>
     <markdown>
-        Необходимо написать сущность игры.
 
-        У сущности должны быть:
-
-        - id Long
-        - name String
-        - developer String
     </markdown>
-    <exercise.universal type="check-exit-code" exerciseDirName="Exercise" noStudentZip="true">
+    <exercise.universal type="check-exit-code" exerciseDirName="springboot2" noStudentZip="true">
         <checkForPlagiarism>true</checkForPlagiarism>
         <hideSolutions>true</hideSolutions>
-        <includePathForChecker>./Exercise/.mvn/</includePathForChecker>
+        <includePathForChecker>./springboot2/.mvn/</includePathForChecker>
         <hideExpectedOutput>false</hideExpectedOutput>
-        <userCodeFile>./src/main/java/me/ulearn/springboot/entity/Game.java</userCodeFile>
+        <userCodeFile>./src/main/java/me/ulearn/springboot2/controller/FilmController.java</userCodeFile>
         <dockerImageName>java-pg-sandbox</dockerImageName>
         <timeLimit>30</timeLimit>
         <interpretNonJsonOutputAs>CE</interpretNonJsonOutputAs>

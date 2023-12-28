@@ -1,4 +1,4 @@
-package U003_First_Rest_API.Exercise.src.main.java.me.ulearn.springboot.controller;
+package me.ulearn.springboot.controller;
 
 import me.ulearn.springboot.entity.Game;
 import org.springframework.http.HttpStatus;
