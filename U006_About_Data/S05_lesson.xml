@@ -1,0 +1,354 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<slide xmlns="https://ulearn.me/schema/v2" title="Создание с помощью Redis сервиса на основе шаблона" id="e4f04579-be2f-46c1-9d53-8d27cf5df688">
+    <markdown>
+        Redis — база данных, используемая обычно в качестве хранилища данных в оперативной памяти для обмена информацией о состоянии между различными экземплярами сервиса, кэширования и в качестве брокера сообщений между сервисами. Также как и большинство баз данных, Redis способна на большее, но в этой главе мы воспользуемся ею лишь для хранения и извлечения из памяти информации о воздушных судах, получаемой нашим сервисом от вышеупомянутого сервиса PlaneFinder.
+        Инициализация проекта
+
+        Для начала обратимся к Spring Initializr. Мы выбрали следующие опции:
+
+        -	проект Maven;
+        -	Java;
+        -	текущая стабильная версия Spring Boot;
+        -	упаковка — JAR;
+        -	Java — 11.
+
+        И зависимости:
+
+        -	Spring Reactive Web (spring-boot-starter-webflux);
+        -	Spring Data Redis (Access+Driver) (spring-boot-starter-data-redis);
+        -	Lombok (lombok).
+
+
+        #### *ПРИМЕЧАНИЯ ОБ ОПЦИЯХ ПРОЕКТА*
+        *В скобках после названия меню Initializr указаны идентификаторы артефактов для приведенных ранее возможностей/библиотек. У первых двух — общий идентификатор группы — org.springframework.boot, а у Lombok — org.projectlombok.
+        И хотя мы не выбирали умышленно какие-либо неблокирующие реактивные функциональные возможности для приложений этой главы, мы включили зависимость для Spring Reactive Web вместо Spring Web, чтобы получить доступ к WebClient — предпочтительному клиенту как для блокирующих, так и для неблокирующих взаимодействий приложений, основанных на Spring Boot 2.0 и более поздних версий, с сервисами. С точки зрения разработчика, создающего простейший веб-сервис, код не меняется, какую бы из этих зависимостей не включить: в примерах этой главы код, аннотации и свойства совершенно одинаковы для обоих. Различия будут освещены по мере того, как в следующих главах два этих пути начнут расходиться.*
+
+        #### Разработка сервиса Redis
+        Начнем с предметной области.
+        В настоящее время API-шлюз PlaneFinder предоставляет одну конечную точку
+        REST:
+
+        ```
+        http://localhost:7634/aircraft
+        ```
+
+        Любой локальный сервис может обратиться с запросом к этой конечной точке и получить ответ в виде JSON со списком всех воздушных судов, находящихся в пределах досягаемости приемника, в следующем формате (с типичными образцами данных):
+
+        ```
+        [
+            {
+                "id": 108,
+                "callsign": "AMF4263",
+                "squawk": "4136",
+                "reg": "N49UC",
+                "flightno": "",
+                "route": "LAN-DFW",
+                "type": "B190",
+                "category": "A1",
+                "altitude": 20000,
+                "heading": 235,
+                "speed": 248,
+                "lat": 38.865905,
+                "lon": -90.429382,
+                "barometer": 0,
+                "vert_rate": 0,
+                "selected_altitude": 0,
+                "polar_distance": 12.99378,
+                "polar_bearing": 345.393951,
+                "is_adsb": true,
+                "is_on_ground": false,
+                "last_seen_time": "2020-11-11T21:44:04Z",
+                "pos_update_time": "2020-11-11T21:44:03Z",
+                "bds40_seen_time": null
+            },
+            {&lt;другое воздушное судно в пределах досягаемости, те же поля, что и выше>},
+            {&lt;последнее воздушное судно, находящееся сейчас в пределах досягаемости,
+            те же поля, что и выше>}
+        ]
+        ```
+
+        Определение класса предметной области
+        Для ввода и обработки отчетов о воздушных судах мы создал класс Aircraft
+        следующего вида:
+
+        ```
+        package com.thehecklers.sburredis;
+
+        import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+        import com.fasterxml.jackson.annotation.JsonProperty;
+        import lombok.AllArgsConstructor;
+        import lombok.Data;
+        import lombok.NoArgsConstructor;
+        import org.springframework.data.annotation.Id;
+
+        import java.time.Instant;
+
+        @Data
+        @NoArgsConstructor
+        @AllArgsConstructor
+        @JsonIgnoreProperties(ignoreUnknown = true)
+        public class Aircraft {
+            @Id
+            private Long id;
+            private String callsign, squawk, reg, flightno, route, type, category;
+            private int altitude, heading, speed;
+            @JsonProperty("vert_rate")
+            private int vertRate;
+            @JsonProperty("selected_altitude")
+            private int selectedAltitude;
+            private double lat, lon, barometer;
+            @JsonProperty("polar_distance")
+            private double polarDistance;
+            @JsonProperty("polar_bearing")
+            private double polarBearing;
+            @JsonProperty("is_adsb")
+            private boolean isADSB;
+            @JsonProperty("is_on_ground")
+            private boolean isOnGround;
+            @JsonProperty("last_seen_time")
+            private Instant lastSeenTime;
+            @JsonProperty("pos_update_time")
+            private Instant posUpdateTime;
+            @JsonProperty("bds40_seen_time")
+            private Instant bds40SeenTime;
+
+            public String getLastSeenTime() {
+                return lastSeenTime.toString();
+            }
+
+            public void setLastSeenTime(String lastSeenTime) {
+                if (null != lastSeenTime) {
+                    this.lastSeenTime = Instant.parse(lastSeenTime);
+                } else {
+                    this.lastSeenTime = Instant.ofEpochSecond(0);
+                }
+            }
+
+            public String getPosUpdateTime() {
+                return posUpdateTime.toString();
+            }
+
+            public void setPosUpdateTime(String posUpdateTime) {
+                if (null != posUpdateTime) {
+                    this.posUpdateTime = Instant.parse(posUpdateTime);
+                } else {
+                    this.posUpdateTime = Instant.ofEpochSecond(0);
+                }
+            }
+
+            public String getBds40SeenTime() {
+                return bds40SeenTime.toString();
+            }
+
+            public void setBds40SeenTime(String bds40SeenTime) {
+                if (null != bds40SeenTime) {
+                    this.bds40SeenTime = Instant.parse(bds40SeenTime);
+                } else {
+                    this.bds40SeenTime = Instant.ofEpochSecond(0);
+                }
+            }
+        }
+        ```
+
+        Этот класс предметной области включает несколько полезных аннотаций, упрощающих код и/или повышающих его гибкость. В число аннотаций уровня класса входят следующие:
+
+        -	@Data — указывает Lombok создать метод-геттер, метод-сеттер, equals(), hashCode() и toString(), то есть так называемый класс данных;
+        -	@NoArgsConstructor — позволяет создать конструктор без параметров, то есть не требующий аргументов;
+        -	@AllArgsConstructor — позволяет создать конструктор с параметром для каждой переменной-члена, то есть требующий указания аргумента для каждого из них;
+        -	@JsonIgnoreProperties(ignoreUnknown = true) — указывает механизмам десериализации Jackson игнорировать поля в JSON-ответах, для которых не существует соответствующей переменной экземпляра.
+
+        Аннотации уровня полей позволяют точнее контролировать поведение. В числе примеров аннотаций уровня полей — две аннотации этого класса:
+
+        -	@Id — помечает аннотированную переменную-член класса как содержащую уникальный идентификатор записи базы данных;
+        -	@JsonProperty("vert_rate") — связывает переменную-член класса с полем JSON с другим именем.
+
+        Вам может быть интересно, зачем мы создали явным образом методы доступа и изменения для трех переменных экземпляра типа Instant, если аннотация @Data обеспечивает создание методов-геттеров и методов-сеттеров для всех переменных экземпляра. В случае этих трех переменных необходимо выполнить синтаксический разбор JSON-значения и преобразовать его из String в составной тип данных с помощью вызова метода Instant::parse. Если значения вообще нет (null), нужно следовать другой логике, чтобы не передать случайно null методу parse() и чтобы присвоить осмысленное подстановочное значение соответствующей переменной-члену с помощью метода-сеттера. Кроме того, сериализацию значения типа Instant лучше всего выполнять путем преобразования в String — отсюда и необходимость в явных методах-геттерах.
+
+        Теперь, описав класс предметной области, мы можем создать и настроить механизм доступа к базе данных Redis.
+
+        #### Добавляем поддержку шаблонов
+
+        У Spring Boot есть базовую функциональность RedisTemplate с помощью автоконфигурации, и для выполнения операций над значениями String с помощью Redis, требуется немного кода и времени. Для взаимодействия с более сложными объектами предметной области необходима расширенная конфигурация.
+
+        RedisTemplate – класс, который дополняет RedisAccessor и реализует интерфейс RedisOperations. Однако наибольший интерес для нашего приложения представляет интерфейс RedisOperations, так как именно он описывает функциональность, необходимую для взаимодействия с Redis.
+
+        Разработчики должны стремиться к написанию кода с учетом интерфейсов, а не основываться только на реализациях. Это позволяет выбрать наиболее подходящую реализацию для решения конкретной задачи, не требуя изменения кода, API или нарушения принципа DRY (Don’t Repeat Yourself — «Не повторяйся»). Когда интерфейс полностью реализован, любая из возможных реализаций работает одинаково хорошо.
+
+        В следующем примере мы инициализируем компонент RedisOperations, который будет использовать RedisTemplate в качестве конкретной реализации. Чтобы корректно настроить его для работы с объектом Aircraft, мы выполнили следующие действия.
+
+        1. Создали Serializer для преобразования объектов и JSON записей. Так как Jackson уже включен в  Spring Boot веб-приложение для маршалинга/демаршалинга JSON значений, мы создали Jackson2JsonRedisSerializer для объектов типа Aircraft.
+        2. Настроили RedisTemplate, который принимает ключи типа String и значения типа Aircraft, для работы с объектом Aircraft, который поступает на вход с идентификаторами типа String. Также подключил компонент RedisConnectionFactory, который автоматически связывается с RedisConnectionFactory factory, параметром метода создания этого компонента, с объектом template, позволяя ему устанавливать и получать соединение с базой данных Redis.
+        3. Назначили Jackson2JsonRedisSerializer&lt;Aircraft> в качестве сериализатора по умолчанию для template. RedisTemplate имеет несколько сериализаторов, из которых можно использовать сериализатор по умолчанию, если не выбран конкретный. Это очень удобно.
+        4. Создали еще один сериализатор для ключей, чтобы template не использовал сериализатор по умолчанию, который ожидает объекты типа Aircraft, для преобразования ключей в значения типа String и наоборот. Для этой цели отлично подходит StringRedisSerializer.
+        5. Наконец, вернули созданный и настроенный в качестве компонента RedisOperations, который будет использоваться внутри приложения, когда требуется реализация компонента RedisOperations:
+
+        ```
+        import org.springframework.boot.SpringApplication;
+        import org.springframework.boot.autoconfigure.SpringBootApplication;
+        import org.springframework.context.annotation.Bean;
+        import org.springframework.data.redis.connection.RedisConnectionFactory;
+        import org.springframework.data.redis.core.RedisOperations;
+        import org.springframework.data.redis.core.RedisTemplate;
+        import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
+        import org.springframework.data.redis.serializer.StringRedisSerializer;
+
+        @SpringBootApplication
+        public class SburRedisApplication {
+            @Bean
+            public RedisOperations&lt;String, Aircraft>
+
+            redisOperations(RedisConnectionFactory factory) {
+                Jackson2JsonRedisSerializer&lt;Aircraft> serializer =
+                    new Jackson2JsonRedisSerializer&lt;>(Aircraft.class);
+
+                RedisTemplate&lt;String, Aircraft> template = new RedisTemplate&lt;>();
+                template.setConnectionFactory(factory);
+                template.setDefaultSerializer(serializer);
+                template.setKeySerializer(new StringRedisSerializer());
+
+                return template;
+            }
+
+            public static void main(String[] args) {
+                SpringApplication.run(SburRedisApplication.class, args);
+            }
+        }
+        ```
+
+        #### Собираем все вместе
+
+        Для обеспечения доступа к базе данных Redis мы разработали основу, используя шаблон. Теперь пришло время собирать плоды труда. Как видно из приведенного ниже кода, мы создали класс Spring Boot с аннотацией @Component, который отвечает за запрос конечной точки PlaneFinder и обработку записей Aircraft, полученных с помощью Redis-шаблонов.
+
+        Для инициализации компонента PlaneFinderPoller и его подготовки к работе мы создали экземпляр WebClient, указывающий на целевую конечную точку, предоставленную внешним сервисом PlaneFinder, и присвоили его переменной экземпляра.
+
+        Для работы компоненту PlaneFinderPoller необходим доступ к двум другим компонентам: RedisConnectionFactory (предоставляется с помощью автоконфигурации Spring Boot, так как Redis является одной из зависимостей приложения) и реализации интерфейса RedisOperations, представленной ранее созданным RedisTemplate. Оба компонента были присвоены соответствующим переменным-членам с использованием метода внедрения зависимостей через конструктор (с автоматическим связыванием):
+
+        ```
+        import org.springframework.data.redis.connection.RedisConnectionFactory;
+        import org.springframework.data.redis.core.RedisOperations;
+        import org.springframework.scheduling.annotation.EnableScheduling;
+        import org.springframework.stereotype.Component;
+        import org.springframework.web.reactive.function.client.WebClient;
+
+        @EnableScheduling
+        @Component
+        class PlaneFinderPoller {
+            private WebClient client = WebClient.create("http://localhost:7634/aircraft");
+
+            private final RedisConnectionFactory connectionFactory;
+            private final RedisOperations&lt;String, Aircraft> redisOperations;
+
+            PlaneFinderPoller(RedisConnectionFactory connectionFactory,
+                            RedisOperations&lt;String, Aircraft> redisOperations) {
+                this.connectionFactory = connectionFactory;
+                this.redisOperations = redisOperations;
+            }
+        }
+        ```
+
+        Затем мы разработали метод, который выполняет основную работу. Для реализации опроса в соответствии с заданным расписанием мы использовали аннотацию @EnableScheduling, которая была применена на уровне класса. Также добавили аннотацию @Scheduled к созданному нами методу pollPlanes(), передав ему параметр fixedDelay=1000, указывающий, что опрос должен выполняться каждые 1000 мс (раз в секунду). Остальная часть этого метода состоит из трех декларативных операторов: очистка ранее сохраненных объектов Aircraft, получение и сохранение текущих местоположений самолетов и вывод отчета о последних полученных данных.
+
+        Что касается первой задачи: для получения соединения с базой данных мы использовали автоматически связываемый объект Connectionfactory. Через это соединение мы выполнили команду сервера для очистки всех имеющихся ключей — flushDb().
+
+        Второй оператор вызывает PlaneFinder с помощью объекта WebClient и извлекает набор воздушных судов, находящихся в пределах досягаемости, вместе с информацией об их местоположении в текущий момент времени. Тело ответа преобразуется в Flux (реактивный тип данных) объектов Aircraft, фильтруется для исключения объектов Aircraft без регистрационных номеров, преобразуется в Stream объектов Aircraft и сохраняется в базу данных Redis. Каждый допустимый объект Aircraft сохраняется путем присваивания пары "ключ-значение", где ключ – это регистрационный номер Aircraft, а значение - сам объект Aircraft. Для выполнения этих операций используются команды Redis, предназначенные для манипулирования данными.
+
+        Последний оператор в методе pollPlanes() также использует несколько операций для извлечения всех ключей (с помощью подстановочного знака *), получения соответствующих значений Aircraft для каждого ключа и их последующего вывода на экран. Вот окончательная версия метода pollPlanes():
+
+        ```
+        @Scheduled(fixedRate = 1000)
+        private void pollPlanes() {
+            connectionFactory.getConnection().serverCommands().flushDb();
+                    client.get()
+                    .retrieve()
+                    .bodyToFlux(Aircraft.class)
+                    .filter(plane -> !plane.getReg().isEmpty())
+                    .toStream()
+                    .forEach(ac -> redisOperations.opsForValue().set(ac.getReg(), ac));
+
+            redisOperations.opsForValue()
+                    .getOperations()
+                    .keys("*")
+                    .forEach(ac ->
+                        System.out.println(redisOperations.opsForValue().get(ac)));
+        }
+        ```
+
+        Конечная версия класса PlaneFinderPoller на данный момент:
+
+        ```
+        import org.springframework.data.redis.connection.RedisConnectionFactory;
+        import org.springframework.data.redis.core.RedisOperations;
+        import org.springframework.scheduling.annotation.EnableScheduling;
+        import org.springframework.scheduling.annotation.Scheduled;
+        import org.springframework.stereotype.Component;
+        import org.springframework.web.reactive.function.client.WebClient;
+
+        @EnableScheduling
+        @Component
+        class PlaneFinderPoller {
+            private WebClient client =
+                    WebClient.create("http://localhost:7634/aircraft");
+
+            private final RedisConnectionFactory connectionFactory;
+            private final RedisOperations&lt;String, Aircraft> redisOperations;
+
+            PlaneFinderPoller(RedisConnectionFactory connectionFactory,
+                        RedisOperations&lt;String, Aircraft> redisOperations) {
+                this.connectionFactory = connectionFactory;
+                this.redisOperations = redisOperations;
+            }
+
+            @Scheduled(fixedRate = 1000)
+            private void pollPlanes() {
+            connectionFactory.getConnection().serverCommands().flushDb();
+
+            client.get()
+                .retrieve()
+                .bodyToFlux(Aircraft.class)
+                .filter(plane -> !plane.getReg().isEmpty())
+                .toStream()
+                .forEach(ac ->
+                    redisOperations.opsForValue().set(ac.getReg(), ac));
+
+            redisOperations.opsForValue()
+                .getOperations()
+                .keys("*")
+                .forEach(ac ->
+                    System.out.println(redisOperations.opsForValue().get(ac)));
+            }
+        }
+        ```
+
+        Механизмы опроса полностью реализованы, и мы можем запустить приложение и посмотреть, что получилось.
+
+        #### Результаты
+
+        Мы использовали сервис PlaneFinder, который предварительно был запущен на моем компьютере, чтобы получать, сохранять и извлекать информацию из Redis. Кроме того, это приложение отображает результаты каждого запроса к PlaneFinder на экране. Ниже приведен пример итоговых результатов, которые мы немного отредактировали для краткости и лучшей читаемости.
+
+        ```
+        Aircraft(id=1, callsign=EDV5015, squawk=3656, reg=N324PQ, flightno=DL5015,
+        route=ATL-OMA-ATL, type=CRJ9, category=A3, altitude=35000, heading=168,
+        speed=485, vertRate=-64, selectedAltitude=0, lat=38.061808, lon=-90.280629,
+        barometer=0.0, polarDistance=53.679699, polarBearing=184.333345, isADSB=true,
+        isOnGround=false, lastSeenTime=2020-11-27T18:34:14Z,
+        posUpdateTime=2020-11-27T18:34:11Z, bds40SeenTime=1970-01-01T00:00:00Z)
+
+        Aircraft(id=4, callsign=AAL500, squawk=2666, reg=N839AW, flightno=AA500,
+        route=PHX-IND, type=A319, category=A3, altitude=36975, heading=82, speed=477,
+        vertRate=0, selectedAltitude=36992, lat=38.746399, lon=-90.277644,
+        barometer=1012.8, polarDistance=13.281347, polarBearing=200.308663, isADSB=true,
+        isOnGround=false, lastSeenTime=2020-11-27T18:34:50Z,
+        posUpdateTime=2020-11-27T18:34:50Z, bds40SeenTime=2020-11-27T18:34:50Z)
+
+        Aircraft(id=15, callsign=null, squawk=4166, reg=N404AN, flightno=AA685,
+        route=PHX-DCA, type=A21N, category=A3, altitude=39000, heading=86, speed=495,
+        vertRate=0, selectedAltitude=39008, lat=39.701611, lon=-90.479309,
+        barometer=1013.6, polarDistance=47.113195, polarBearing=341.51817, isADSB=true,
+        isOnGround=false, lastSeenTime=2020-11-27T18:34:50Z,
+        posUpdateTime=2020-11-27T18:34:50Z, bds40SeenTime=2020-11-27T18:34:50Z)
+        ```
+
+        Использование шаблонов Spring Data предоставляет возможность работать с базами данных через гибкий низкоуровневый API. Однако, если вашей целью является удобная и эффективная работа с максимальной повторяемостью, рекомендуется использовать поддержку репозиториев. В следующем руководстве мы продемонстрируем, как перейти от использования шаблонов для взаимодействия с Redis к использованию репозитория Spring Data.
+
+    </markdown>
+</slide>

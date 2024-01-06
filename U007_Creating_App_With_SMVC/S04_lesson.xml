@@ -1,0 +1,143 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<slide xmlns="https://ulearn.me/schema/v2" title="Расширяем приложение Aircraft Positions" id="aec96580-e5b5-4487-9dd1-b94a56417122">
+    <markdown>
+        Чтобы приложение Aircraft Positions потребляло сообщения из конвейера RabbitMQ с помощью Spring Cloud Stream нужно заменить регулярные HTTP-запросы ориентированной на сообщения архитектурой, а для этого требуется лишь несколько изменений внутренних механизмов.
+
+        #### Необходимые зависимости
+
+        Добавим в файл pom.xml приложения Aircraft Positions зависимости:
+
+        ```
+        &lt;dependency>
+            &lt;groupId>org.springframework .boot&lt;/groupId>
+            &lt;artifactId>spring-boot-starter-amqp&lt;/artifactId>
+        &lt;/dependency>
+        &lt;dependency>
+            &lt;groupId>org. springframework.cloud&lt;/groupId>
+            &lt;artifactId>spring-cloud-stream&lt;/artifactId>
+        &lt;/dependency>
+        &lt;dependency>
+            &lt;groupId>org. springframework.cloud&lt;/groupId>
+            &lt;artifactId>spring-cloud-stream-binder-kafka&lt;/artifactId>
+        &lt;/dependency>
+        &lt;dependency>
+            &lt;groupId>org. springframework.cloud&lt;/groupId>
+            &lt;artifactId>spring-cloud-stream-binder-rabbit&lt;/artifactId>
+        &lt;/dependency>
+        &lt;dependency>
+            &lt;groupId>org. springframework.kafka&lt;/groupId>
+            &lt;artifactId>spring-kafka&lt;/artifactId>
+        &lt;/dependency>
+
+        ```
+
+        Также добавим две дополнительные записи в файл pom.xml: включим в раздел &lt;properties> &lt;/properties>(рядом с java.version) следующее:
+
+        ```
+        &lt;spring-cloud.version>2020.0.0-M5&lt;/spring-cloud.version>
+
+        ```
+        А также информацию BOM Spring Cloud:
+
+        ```
+        &lt;dependencyManagement>
+            &lt;dependencies>
+                &lt;dependency>
+                    &lt;groupIdId>org. springframework.cloud&lt;/groupIdId>
+                    &lt;artifactId>spring-cloud-dependencies&lt;/artifactId>
+                    &lt;version>${spring-cloud.version}&lt;/version>
+                    &lt;type>pom&lt;/type>
+                    &lt;scope>import&lt;/scope>
+                &lt;/dependency>
+            &lt;/dependencies>
+        &lt;/dependencyManagement>
+
+        ```
+
+        #### Потребление данных о местоположении воздушных судов
+
+        Добавим один дополнительный класс для извлечения и сохранения сообщений с информацией о текущем местоположении воздушных судов:
+
+        ```
+        @AllArgsConstructor
+        @Configuration
+        public class PositionRetriever {
+            private final AircraftRepository repo;
+
+            @Bean
+            Consumer&lt;List> retrieveAircraftPositions() {
+                return acList -> {
+                    repo.deleteAll();
+
+                    repo.saveAll(acList);
+
+                    repo.findAll().forEach(System.out::println);
+                };
+            }
+        }
+
+        ```
+        Как и в классе PositionReporter в сервисе PlaneFinder, класс PositionRetriever имеет аннотацию @Configuration и представляет собой компонент для использования со Spring Cloud Stream — в данном случае потребитель (Consumer) сообщений, каждое из которых содержит List с одним или несколькими объектами Aircraft. При поступлении каждого входящего сообщения компонент Consumer удаляет все местоположения из хранилища данных в оперативной памяти, сохраняет все входящие записи о местоположении, после чего выводит их все на консоль для проверки. Выделим, что последний оператор, выводящий местоположения на консоль, необязателен.
+
+        #### Свойства приложения
+
+        Добавим в файл application.properties записи, чтобы предоставить приложению оставшиеся фрагменты информации, необходимые для подключения к входящему потоку сообщений:
+
+        ```
+        spring.cloud.stream.bindings.retrieveAircraftPositions-in-0.destination= aircraftpositions
+        spring.cloud.stream.bindings.retrieveAircraftPositions-in-0.group= aircraftpositions
+        spring.cloud.stream.bindings.retrieveAircraftPositions-in-0.binder= rabbit
+
+        ```
+        Канал определяется путем конкатенации следующих элементов, разделяемых черточкой (-):
+        •	имени компонента, в данном случае Consumer&lt;T>;
+        •	 in, поскольку потребители лишь потребляют сообщения, а значит, у них есть только входные каналы;
+        •	числа от 0 до 7 включительно, так что входных каналов может быть до 8.
+
+        Приложение Aircraft Positions должно указывать в качестве входного канала на то же destination, которое использовалось в PlaneFinder в качестве выходного, поэтому значения свойств destination и binder совпадают с соответствующими значениями PlaneFinder. А также потому что платформа обмена сообщениями должна быть у обоих приложений одинаковой (в данном случае RabbitMQ). Свойство group для нас новое.
+
+        Задать группу можно для любого типа потребителя, включая приемную часть Function. На самом деле включение или исключение свойства group — начало одного из паттернов маршрутизации.
+
+        Если для потребляющего сообщения приложения не задана группа, адаптер привязки RabbitMQ создает случайное уникальное имя, помещая его и потребителя в очередь автоудаления в экземпляре или кластере RabbitMQ. В результате каждая сгенерированная очередь обслуживается только одним потребителем.
+
+        Это важно, так как при поступлении сообщения в точку обмена RabbitMQ его копия автоматически перенаправляется всем очередям, распределенным по умолчанию на эту точку обмена. Если у одной точки обмена нескольких очередей, одно и то же сообщение отправляется каждой очереди в соответствии с так называемым паттерном разветвления по выходу (fan-out pattern). Это полезно для случаев, когда необходимо доставить каждое сообщение в несколько точек назначения, чтобы удовлетворить различные требования.
+
+        Если же приложение указывает группу потребителей, к которой оно принадлежит, то имя группы используется для обозначения базовой очереди в RabbitMQ. Если у нескольких приложений задано одинаковое значение свойства group, то есть они подключаются к одной очереди, а это значит, что все вместе они реализуют паттерн конкурирующих потребителей, при котором каждое поступающее в назначенную очередь сообщение обрабатывается лишь одним из потребителей.
+
+        Для еще более точной и гибкой маршрутизации можно воспользоваться секционированием и ключами маршрутизации.
+
+        Указание свойства group дает возможность масштабировать его на случай, если для обработки потока поступающих сообщений понадобится несколько его экземпляров.
+
+        #### Controller
+
+        Так как компонент Consumer автоматически проверяет наличие новых сообщений и обрабатывает их, объем класса PositionController и его метода getCurrentAircraftPositions() сокращаеются.
+
+        Мы можем удалить все ссылки на WebClient, поскольку получение списка текущих местоположений воздушных судов теперь сводится к извлечению содержимого в репозитории в данный момент:
+
+        ```
+        @RequiredArgsConstructor
+        @Controller
+        public class PositionController {
+            @NonNull
+            private final AircraftRepository repository;
+
+            @GetMapping("/aircraft")
+            public String getCurrentAircraftPositions(Model model) {
+                model.addAttribute("currentPositions", repository.findAll());
+                return "positions";
+            }
+        }
+
+        ```
+        *Для того, чтобы использовать какую-либо внешнюю платформу обмена сообщениями, она должна быть запущена и доступна для приложений.*
+
+        #### Результаты
+
+        Теперь, после проверки доступности RabbitMQ, мы можем запустить приложения и удостовериться в правильности работы.
+
+        В результате запуска поток сообщений начинает поступать в приложение Aircraft Positions, это демонстрирует его консоль. Теперь мы можем дойти по этому пути вплоть до конечного пользователя.
+
+        Зайдя на страницу localhost:8080 в браузере, мы видим целевую страницу. Щелкнув на кнопку Click here, попадаем на страницу Positions Report. Страница Positions Report обновляется автоматически и отображает текущее местоположение воздушных судов как раньше, но теперь эти данные передаются независимо от PlaneFinder в Aircraft Positions, больше не требуется сначала выполнять HTTP-запрос.
+
+    </markdown>
+</slide>

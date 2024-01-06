@@ -1,0 +1,178 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<slide xmlns="https://ulearn.me/schema/v2" title="Преобразование из шаблона в репозиторий" id="85d7f228-0b73-4b46-b488-614b93f554b3">
+    <markdown>
+        Автоконфигурация Spring Boot сильно облегчает эту первоначальную задачу использования репозитория – его определение. Мы создали следующий интерфейс репозитория, расширив класс CrudRepository Spring Data и указав тип хранимых объектов вместе с ключами — Aircraft и Long в данном случае:
+
+        ```
+        public interface AircraftRepository extends CrudRepository&lt;Aircraft, Long> {}
+        ```
+
+        В одной из предыдущих глав, было объяснено, что Spring Boot обнаруживает драйвер базы данных Redis по пути к классам приложения и замечает, что мы расширяем интерфейс репозитория Spring Data. После этого, автоматически создается прокси для базы данных, и для его инициирования не требуется дополнительного кода. Теперь, наше приложение имеет доступ к компоненту AircraftRepository, поэтому давайте подключим его и начнем использовать.
+
+        Возвращаясь к классу PlaneFinderPoller, мы можем заменить низкоуровневые ссылки на интерфейс RedisOperations и операции, связанные с ним, на AircraftRepository.
+
+        В первую очередь, удалим переменную-член класса RedisOperations: private final RedisOperations&lt;String, Aircraft> redisOperations;
+
+        И заменим ее на репозиторий AircraftRepository для автоматического связывания:
+
+        ```
+        private final AircraftRepository repository;
+        ```
+
+        Следующим шагом мы осуществляем внедрение зависимости через конструктор, чтобы автоматически связываемый компонент RedisOperations был заменен на AircraftRepository. Модифицировал также присваивание внутри конструктора, чтобы в итоге его структура выглядела таким образом:
+
+        ```
+        public PlaneFinderPoller(RedisConnectionFactory connectionFactory,
+                            AircraftRepository repository) {
+            this.connectionFactory = connectionFactory;
+            this.repository = repository;
+        }
+        ```
+
+        Дальше производим рефакторинг метода pollPlanes() с целью замены операции на основе шаблона операциями на основе репозитория.
+
+        Проще всего изменить последнюю строку первого оператора. Упрощаем лямбда-выражение еще больше с помощью ссылки на метод:
+
+        ```
+        client.get()
+                .retrieve()
+                .bodyToFlux(Aircraft.class)
+                .filter(plane -> !plane.getReg().isEmpty())
+                .toStream()
+                .forEach(repository::save);
+        ```
+
+        Второй оператор упрощается еще сильнее, тоже благодаря ссылке на метод:
+
+        ```
+        repository.findAll().forEach(System.out::println);
+        ```
+
+        Класс PlaneFinderPoller, который теперь использует репозиторий, выглядит так:
+
+        ```
+        import org.springframework.data.redis.connection.RedisConnectionFactory;
+        import org.springframework.scheduling.annotation.EnableScheduling;
+        import org.springframework.scheduling.annotation.Scheduled;
+        import org.springframework.stereotype.Component;
+        import org.springframework.web.reactive.function.client.WebClient;
+
+        @EnableScheduling
+        @Component
+        class PlaneFinderPoller {
+            private WebClient client = WebClient.create("http://localhost:7634/aircraft");
+
+            private final RedisConnectionFactory connectionFactory;
+            private final AircraftRepository repository;
+
+            PlaneFinderPoller(RedisConnectionFactory connectionFactory,
+                            AircraftRepository repository) {
+                this.connectionFactory = connectionFactory;
+                this.repository = repository;
+            }
+
+            @Scheduled(fixedRate = 1000)
+            private void pollPlanes() {
+                connectionFactory.getConnection().serverCommands().flushDb();
+
+                client.get()
+                        .retrieve()
+                        .bodyToFlux(Aircraft.class)
+                        .filter(plane -> !plane.getReg().isEmpty())
+                        .toStream()
+                        .forEach(repository::save);
+
+                repository.findAll().forEach(System.out::println);
+            }
+        }
+        ```
+
+        Так как компонент, реализующий интерфейс RedisOperations, больше не требуется, можно безопасно удалить его определение @Bean из главного класса приложения, оставив только класс SburRedisApplication, как показано ниже:
+
+        ```
+        import org.springframework.boot.SpringApplication;
+        import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+        @SpringBootApplication
+        public class SburRedisApplication {
+
+            public static void main(String[] args) {
+                SpringApplication.run(SburRedisApplication.class, args);
+            }
+        }
+        ```
+
+        Чтобы обеспечить полную поддержку репозитория Redis в нашем приложении, нам осталось сделать одну маленькую деталь - элегантно уменьшить объем кода. Мы добавили аннотацию @RedisHash в класс Aircraft, чтобы отметить его как корневой объект агрегата, который будет сохраняться в хеше Redis, аналогично аннотации @Entity, используемой для объектов JPA. Затем удалили явные объявления методов доступа и изменения для переменных экземпляра типа Instant, так как преобразователи, предоставляемые репозиторием Spring Data, легко справляются с преобразованиями сложных типов данных. В итоге, новый и упрощенный класс Aircraft выглядит следующим образом:
+
+        ```
+        import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+        import com.fasterxml.jackson.annotation.JsonProperty;
+        import lombok.AllArgsConstructor;
+        import lombok.Data;
+        import lombok.NoArgsConstructor;
+        import org.springframework.data.annotation.Id;
+        import org.springframework.data.redis.core.RedisHash;
+
+        import java.time.Instant;
+
+        @Data
+        @NoArgsConstructor
+        @AllArgsConstructor
+        @RedisHash
+        @JsonIgnoreProperties(ignoreUnknown = true)
+        public class Aircraft {
+        @Id
+            private Long id;
+            private String callsign, squawk, reg, flightno, route, type, category;
+            private int altitude, heading, speed;
+            @JsonProperty("vert_rate")
+            private int vertRate;
+            @JsonProperty("selected_altitude")
+            private int selectedAltitude;
+            private double lat, lon, barometer;
+            @JsonProperty("polar_distance")
+            private double polarDistance;
+            @JsonProperty("polar_bearing")
+            private double polarBearing;
+            @JsonProperty("is_adsb")
+            private boolean isADSB;
+            @JsonProperty("is_on_ground")
+            private boolean isOnGround;
+            @JsonProperty("last_seen_time")
+            private Instant lastSeenTime;
+            @JsonProperty("pos_update_time")
+            private Instant posUpdateTime;
+            @JsonProperty("bds40_seen_time")
+            private Instant bds40SeenTime;
+        }
+        ```
+
+        После внесения указанных изменений и перезапуска сервиса, выводимые результаты остаются неотличимыми от тех, которые были получены с использованием шаблонов. Однако, теперь нам требуется гораздо меньше кода и формальностей. Вот пример, который был отредактирован для краткости и отформатирован для удобного чтения:
+
+        ```
+        Aircraft(id=59, callsign=KAP20, squawk=4615, reg=N678JG, flightno=,
+        route=STL-IRK, type=C402, category=A1, altitude=3825, heading=0, speed=143,
+        vertRate=768, selectedAltitude=0, lat=38.881034, lon=-90.261475, barometer=0.0,
+        polarDistance=5.915421, polarBearing=222.434158, isADSB=true, isOnGround=false,
+        lastSeenTime=2020-11-27T18:47:31Z, posUpdateTime=2020-11-27T18:47:31Z,
+        bds40SeenTime=1970-01-01T00:00:00Z)
+
+        Aircraft(id=60, callsign=SWA442, squawk=5657, reg=N928WN, flightno=WN442,
+        route=CMH-DCA-BNA-STL-PHX-BUR-OAK, type=B737, category=A3, altitude=8250,
+        heading=322, speed=266, vertRate=-1344, selectedAltitude=0, lat=38.604034,
+        lon=-90.357593, barometer=0.0, polarDistance=22.602864, polarBearing=201.283,
+        isADSB=true, isOnGround=false, lastSeenTime=2020-11-27T18:47:25Z,
+        posUpdateTime=2020-11-27T18:47:24Z, bds40SeenTime=1970-01-01T00:00:00Z)
+
+        Aircraft(id=61, callsign=null, squawk=null, reg=N702QS, flightno=,
+        route=SNA-RIC, type=CL35, category=, altitude=43000, heading=90, speed=500,
+        Создание сервиса на основе репозитория с помощью Java Persistence API 125
+        vertRate=0, selectedAltitude=0, lat=39.587997, lon=-90.921299, barometer=0.0,
+        polarDistance=51.544552, polarBearing=316.694343, isADSB=true, isOnGround=false,
+        lastSeenTime=2020-11-27T18:47:19Z, posUpdateTime=2020-11-27T18:47:19Z,
+        bds40SeenTime=1970-01-01T00:00:00Z)
+        ```
+
+        Для достижения прямого доступа к низкоуровневым возможностям, предлагаемым шаблонами Spring Data, необходимо воспользоваться поддержкой доступа к базам данных на основе данных шаблонов. Однако, в большинстве распространенных сценариев использования, в которых Spring Data предоставляет доступ к нужной базе данных через репозиторий, стоит начать именно с этого подхода и, вероятно, остановиться на нем.
+    </markdown>
+</slide>

@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<unit xmlns="https://ulearn.me/schema/v2" title="Создание приложений с помощью Spring MVC" id="39b5c3a5-121e-4640-821c-a3e9e7975efd" url="creatingAppWithSMVC">
+    <slides>
+        <add>S*.xml</add>
+    </slides>
+</unit>

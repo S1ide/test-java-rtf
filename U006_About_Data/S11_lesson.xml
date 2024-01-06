@@ -1,0 +1,475 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<slide xmlns="https://ulearn.me/schema/v2" title="Создание сервиса на основе репозитория с помощью графовой базы данных NoSQL" id="025c31db-3b53-480f-82ca-d4138877a7f6">
+    <markdown>
+        У графовых баз иной подход к их взаимосвязям данных. Существует несколько графовых баз данных, но самая популярная из них — Neo4j.
+
+        Мы рассмотрим, как легко подключиться к Spring Data Neo4j в приложении Spring Boot и работать с данными с ее помощью.
+
+        ### Инициализация проекта
+
+        Обращаемся к Spring Initializr и выбираем следующие опции:
+
+        -	проект Gradle;
+        -	Java;
+        -	текущая стабильная версия Spring Boot;
+        -	упаковка — JAR;
+        -	Java — 11.
+
+        Зависимости:
+
+        -	Spring Reactive Web (spring-boot-starter-webflux);
+        -	Spring Data Neo4j (spring-boot-starter-data-neo4j).
+
+        Сгенерируем проект, сохраним его на локальной машине, разархивируем и откроем в IDE.
+
+        Выберем Gradle в качестве системы сборки этого проекта. Но вы можете применить и Maven.
+
+        #### Разрабатываем сервис Neo4j
+
+        Благодаря Spring Boot и Spring Data работа с базами данных Neo4j практически не отличается от работы с другими типами хранилищ данных. Из приложений Spring Boot можно получить доступ к широким возможностям графового хранилища данных.
+
+        #### Определение класса предметной области
+
+        Начнем с определения предметной области Aircraft. Без зависимости Lombok создадим его с обычным обширным списком конструкторов, методов доступа и изменения и вспомогательных методов:
+
+        ```
+        import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+        import com.fasterxml.jackson.annotation.JsonProperty;
+        import org.springframework.data.neo4j.core.schema.GeneratedValue;
+        import org.springframework.data.neo4j.core.schema.Id;
+        import org.springframework.data.neo4j.core.schema.Node;
+
+        @Node
+        @JsonIgnoreProperties(ignoreUnknown = true)
+        public class Aircraft {
+            @Id
+            @GeneratedValue
+            private Long neoId;
+            private Long id;
+            private String callsign, squawk, reg, flightno, route, type, category;
+            private int altitude, heading, speed;
+            @JsonProperty("vert_rate")
+            private int vertRate;
+            @JsonProperty("selected_altitude")
+            private int selectedAltitude;
+            private double lat, lon, barometer;
+            @JsonProperty("polar_distance")
+            private double polarDistance;
+            @JsonProperty("polar_bearing")
+            private double polarBearing;
+            @JsonProperty("is_adsb")
+            private boolean isADSB;
+            @JsonProperty("is_on_ground")
+            private boolean isOnGround;
+            @JsonProperty("last_seen_time")
+            private Instant lastSeenTime;
+            @JsonProperty("pos_update_time")
+            private Instant posUpdateTime;
+            @JsonProperty("bds40_seen_time")
+            private Instant bds40SeenTime;
+            public Aircraft() {
+            }
+
+            public Aircraft(Long id,
+            String callsign, String squawk, String reg, String flightno,
+            String route, String type, String category,
+            int altitude, int heading, int speed,
+            int vertRate, int selectedAltitude,
+            double lat, double lon, double barometer,
+            double polarDistance, double polarBearing,
+            boolean isADSB, boolean isOnGround,
+            Instant lastSeenTime,
+            Instant posUpdateTime,
+            Instant bds40SeenTime) {
+            this.id = id;
+            this.callsign = callsign;
+            this.squawk = squawk;
+            this.reg = reg;
+            this.flightno = flightno;
+            this.route = route;
+            this.type = type;
+            this.category = category;
+            this.altitude = altitude;
+            this.heading = heading;
+            this.speed = speed;
+            this.vertRate = vertRate;
+            this.selectedAltitude = selectedAltitude;
+            this.lat = lat;
+            this.lon = lon;
+            this.barometer = barometer;
+            this.polarDistance = polarDistance;
+            this.polarBearing = polarBearing;
+            this.isADSB = isADSB;
+            this.isOnGround = isOnGround;
+            this.lastSeenTime = lastSeenTime;
+            this.posUpdateTime = posUpdateTime;
+            this.bds40SeenTime = bds40SeenTime;
+        }
+
+        public Long getNeoId() {
+            return neoId;
+        }
+
+        public void setNeoId(Long neoId) {
+            this.neoId = neoId;
+        }
+
+        public Long getId() {
+            return id;
+        }
+
+        public void setId(Long id) {
+            this.id = id;
+        }
+
+        public String getCallsign() {
+            return callsign;
+        }
+
+        public void setCallsign(String callsign) {
+            this.callsign = callsign;
+        }
+
+        public String getSquawk() {
+            return squawk;
+        }
+
+        public void setSquawk(String squawk) {
+            this.squawk = squawk;
+        }
+
+        public String getReg() {
+            return reg;
+        }
+
+        public void setReg(String reg) {
+            this.reg = reg;
+        }
+
+        public String getFlightno() {
+            return flightno;
+        }
+
+        public void setFlightno(String flightno) {
+            this.flightno = flightno;
+        }
+
+        public String getRoute() {
+            return route;
+        }
+
+        public void setRoute(String route) {
+            this.route = route;
+        }
+
+        public String getType() {
+            return type;
+        }
+
+        public void setType(String type) {
+            this.type = type;
+        }
+
+        public String getCategory() {
+            return category;
+        }
+
+        public void setCategory(String category) {
+            this.category = category;
+        }
+
+        public int getAltitude() {
+            return altitude;
+        }
+
+        public void setAltitude(int altitude) {
+            this.altitude = altitude;
+        }
+
+        public int getHeading() {
+            return heading;
+        }
+
+        public void setHeading(int heading) {
+            this.heading = heading;
+        }
+
+        public int getSpeed() {
+            return speed;
+        }
+
+        public void setSpeed(int speed) {
+            this.speed = speed;
+        }
+
+        public int getVertRate() {
+            return vertRate;
+        }
+
+        public void setVertRate(int vertRate) {
+            this.vertRate = vertRate;
+        }
+
+        public int getSelectedAltitude() {
+            return selectedAltitude;
+        }
+
+        public void setSelectedAltitude(int selectedAltitude) {
+            this.selectedAltitude = selectedAltitude;
+        }
+
+        public double getLat() {
+            return lat;
+        }
+
+        public void setLat(double lat) {
+            this.lat = lat;
+        }
+
+        public double getLon() {
+            return lon;
+        }
+
+        public void setLon(double lon) {
+            this.lon = lon;
+        }
+
+        public double getBarometer() {
+            return barometer;
+        }
+
+        public void setBarometer(double barometer) {
+            this.barometer = barometer;
+        }
+
+        public double getPolarDistance() {
+            return polarDistance;
+        }
+
+        public void setPolarDistance(double polarDistance) {
+            this.polarDistance = polarDistance;
+        }
+
+        public double getPolarBearing() {
+            return polarBearing;
+        }
+
+        public void setPolarBearing(double polarBearing) {
+            this.polarBearing = polarBearing;
+        }
+
+        public boolean isADSB() {
+            return isADSB;
+        }
+
+        public void setADSB(boolean ADSB) {
+            isADSB = ADSB;
+        }
+
+        public boolean isOnGround() {
+            return isOnGround;
+        }
+
+        public void setOnGround(boolean onGround) {
+            isOnGround = onGround;
+        }
+
+        public Instant getLastSeenTime() {
+            return lastSeenTime;
+        }
+
+        public void setLastSeenTime(Instant lastSeenTime) {
+            this.lastSeenTime = lastSeenTime;
+        }
+
+        public Instant getPosUpdateTime() {
+            return posUpdateTime;
+        }
+
+        public void setPosUpdateTime(Instant posUpdateTime) {
+            this.posUpdateTime = posUpdateTime;
+        }
+
+        public Instant getBds40SeenTime() {
+            return bds40SeenTime;
+        }
+
+        public void setBds40SeenTime(Instant bds40SeenTime) {
+            this.bds40SeenTime = bds40SeenTime;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Aircraft aircraft = (Aircraft) o;
+            return altitude == aircraft.altitude &#38;&#38;
+                heading == aircraft.heading &#38;&#38;
+                speed == aircraft.speed &#38;&#38;
+                vertRate == aircraft.vertRate &#38;&#38;
+                selectedAltitude == aircraft.selectedAltitude &#38;&#38;
+                Double.compare(aircraft.lat, lat) == 0 &#38;&#38;
+                Double.compare(aircraft.lon, lon) == 0 &#38;&#38;
+                Double.compare(aircraft.barometer, barometer) == 0 &#38;&#38;
+                Double.compare(aircraft.polarDistance, polarDistance) == 0 &#38;&#38;
+                Double.compare(aircraft.polarBearing, polarBearing) == 0 &#38;&#38;
+                isADSB == aircraft.isADSB &#38;&#38;
+                isOnGround == aircraft.isOnGround &#38;&#38;
+                Objects.equals(neoId, aircraft.neoId) &#38;&#38;
+                Objects.equals(id, aircraft.id) &#38;&#38;
+                Objects.equals(callsign, aircraft.callsign) &#38;&#38;
+                Objects.equals(squawk, aircraft.squawk) &#38;&#38;
+                Objects.equals(reg, aircraft.reg) &#38;&#38;
+                Objects.equals(flightno, aircraft.flightno) &#38;&#38;
+                Objects.equals(route, aircraft.route) &#38;&#38;
+                Objects.equals(type, aircraft.type) &#38;&#38;
+                Objects.equals(category, aircraft.category) &#38;&#38;
+                Objects.equals(lastSeenTime, aircraft.lastSeenTime) &#38;&#38;
+                Objects.equals(posUpdateTime, aircraft.posUpdateTime) &#38;&#38;
+                Objects.equals(bds40SeenTime, aircraft.bds40SeenTime);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(neoId, id, callsign, squawk, reg, flightno, route,
+                type, category, altitude, heading, speed, vertRate,
+                selectedAltitude, lat, lon, barometer, polarDistance,
+                polarBearing, isADSB, isOnGround, lastSeenTime, posUpdateTime,
+                bds40SeenTime);
+        }
+
+        @Override
+        public String toString() {
+            return "Aircraft{" +
+                    "neoId=" + neoId +
+                    ", id=" + id +
+                    ", callsign=’" + callsign + '\'' +
+                    ", squawk=’" + squawk + '\'' +
+                    ", reg=’" + reg + '\'' +
+                    ", flightno=’" + flightno + '\'' +
+                    ", route=’" + route + '\'' +
+                    ", type=’" + type + '\'' +
+                    ", category=’" + category + '\'' +
+                    ", altitude=" + altitude +
+                    ", heading=" + heading +
+                    ", speed=" + speed +
+                    ", vertRate=" + vertRate +
+                    ", selectedAltitude=" + selectedAltitude +
+                    ", lat=" + lat +
+                    ", lon=" + lon +
+                    ", barometer=" + barometer +
+                    ", polarDistance=" + polarDistance +
+                    ", polarBearing=" + polarBearing +
+                    ", isADSB=" + isADSB +
+                    ", isOnGround=" + isOnGround +
+                    ", lastSeenTime=" + lastSeenTime +
+                    ", posUpdateTime=" + posUpdateTime +
+                    ", bds40SeenTime=" + bds40SeenTime +
+                    '}’;
+            }
+        }
+        ```
+
+        Neo4j требуется генерируемый базой данных уникальный идентификатор, даже если сохраняемая сущность уже содержит уникальный идентификатор. Чтобы удовлетворить это требование, можно добавить параметр/переменную-член neoId и снабдть ее аннотациями @Id и @GeneratedValue, чтобы Neo4j правильно связала эту переменную-член класса со сгенерированным внутренним значением.
+
+        Добавим две аннотации уровня класса:
+
+        -	@Node — указывает, что каждый экземпляр этой record является экземпляром узла Neo4j;
+        -	@JsonIgnoreProperties(ignoreUnknown = true) — игнорирование новых полей, возможно, добавленных в поток данных конечной точкой сервиса PlaneFinder.
+
+        Подобно @Id и @GeneratedValue, аннотация @Node взята из пакета org.springframework.data.neo4j.core.schema, предназначенного для приложений Spring Data, основанных на Neo4j.
+
+        #### Создание интерфейса репозитория
+
+        Далее опишем необходимый интерфейс репозитория, расширяющий интерфейс CrudRepository Spring Data, укажем тип хранимого объекта и его ключа — Aircraft и Long:
+
+        ```
+        public interface AircraftRepository extends CrudRepository&lt;Aircraft, Long> {}
+        ```
+
+        Подобно предыдущему проекту на основе MongoDB, существует интерфейс Neo4jRepository, расширяющий интерфейс PagingAndSortingRepository (он, в свою очередь, расширяет CrudRepository), который можно использовать вместо CrudRepository, но поскольку CrudRepository — интерфейс самого высокого уровня из числа удовлетворяющих всем требованиям, то мы возьмем в качестве базового для AircraftRepository.
+
+        #### Собираем все вместе
+
+        Наш следующий шаг — это создание компонента для опроса сервиса PlaneFinder и настройка его доступа к базе данных Neo4j.
+
+        **Опрос PlaneFinder.** Создадим класс Spring Boot с аннотацией @Component для опроса данных о текущем местоположении воздушных судов и обработки всех полученных записей Aircraft.
+
+        Также создадим объект WebClient, указывающий на целевую конечную точку, предоставляемую сервисом PlaneFinder через порт 7634, и присвоил его переменной-члену.
+
+        Поскольку зависимости Lombok нет, мы создадим конструктор для получения автоматически связываемого компонента AircraftRepository.
+
+        Как можно понять из полного листинга класса PlaneFinderPoller, метод pollPlanes() выглядит практически идентично прочим примерам из-за абстракций, задействованных благодаря поддержке репозиториев:
+
+        ```
+        import org.springframework.scheduling.annotation.EnableScheduling;
+        import org.springframework.scheduling.annotation.Scheduled;
+        import org.springframework.stereotype.Component;
+        import org.springframework.web.reactive.function.client.WebClient;
+
+        @EnableScheduling
+        @Component
+        public class PlaneFinderPoller {
+            private WebClient client = WebClient.create("http://localhost:7634/aircraft");
+            private final AircraftRepository repository;
+
+            public PlaneFinderPoller(AircraftRepository repository) {
+                this.repository = repository;
+            }
+
+            @Scheduled(fixedRate = 1000)
+            private void pollPlanes() {
+                repository.deleteAll();
+
+                client.get()
+                        .retrieve()
+                        .bodyToFlux(Aircraft.class)
+                        .filter(plane -> !plane.getReg().isEmpty())
+                        .toStream()
+                        .forEach(repository::save);
+
+                System.out.println("--- All aircraft ---");
+                repository.findAll().forEach(System.out::println);
+            }
+        }
+        ```
+
+        **Соединение с Neo4j.** Необходимо указать Spring Boot кое-какую информацию для беспроблемного соединения с базой данных Neo4j:
+
+        ```
+        spring.neo4j.authentication.username=neo4j
+        spring.neo4j.authentication.password=mkheck
+        ```
+
+        #### Результаты
+
+        Запустим сервис sbur-neo, не отключая сервис PlaneFinder, для получения, сохранения и извлечения информации, а также отображения на экране результатов каждого из опросов сервиса PlaneFinder с Neo4j в качестве базы данных:
+
+        ```
+        Aircraft(neoId=64, id=223, callsign='GJS4401', squawk='1355', reg='N542GJ',
+        flightno='UA4401', route='LIT-ORD', type='CRJ7', category='A2', altitude=37000,
+        heading=24, speed=476, vertRate=128, selectedAltitude=36992, lat=39.463961,
+        lon=-90.549927, barometer=1012.8, polarDistance=35.299257,
+        polarBearing=329.354686, isADSB=true, isOnGround=false,
+        lastSeenTime=2020-11-27T20:42:54Z, posUpdateTime=2020-11-27T20:42:53Z,
+        bds40SeenTime=2020-11-27T20:42:51Z)
+
+        Aircraft(neoId=65, id=224, callsign='N8680B', squawk='1200', reg='N8680B',
+        flightno='', route='', type='C172', category='A1', altitude=3100, heading=114,
+        speed=97, vertRate=64, selectedAltitude=0, lat=38.923955, lon=-90.195618,
+        barometer=0.0, polarDistance=1.986086, polarBearing=208.977102, isADSB=true,
+        isOnGround=false, lastSeenTime=2020-11-27T20:42:54Z,
+        posUpdateTime=2020-11-27T20:42:54Z, bds40SeenTime=null)
+
+        Aircraft(neoId=66, id=225, callsign='AAL1087', squawk='1712', reg='N181UW',
+        flightno='AA1087', route='CLT-STL-CLT', type='A321', category='A3',
+        altitude=7850, heading=278, speed=278, vertRate=-320, selectedAltitude=4992,
+        lat=38.801559, lon=-90.226474, barometer=0.0, polarDistance=9.385111,
+        polarBearing=194.034005, isADSB=true, isOnGround=false,
+        lastSeenTime=2020-11-27T20:42:54Z, posUpdateTime=2020-11-27T20:42:53Z,
+        bds40SeenTime=2020-11-27T20:42:53Z)
+        ```
+
+        В результате сервис работает быстро и эффективно, используя Spring Boot и Neo4j для извлечения, захвата и отображения местоположения воздушных судов по мере получения отчетов о них.
+    </markdown>
+</slide>

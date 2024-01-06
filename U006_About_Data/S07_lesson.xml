@@ -1,0 +1,196 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<slide xmlns="https://ulearn.me/schema/v2" title="Создание сервиса на основе репозитория с помощью Java Persistence API" id="7cb2b5d7-01ab-4e30-9865-5bf324334abf">
+    <markdown>
+        Одним из основных преимуществ экосистемы Spring является ее единообразие, которое позволяет эффективно решать задачи с другими компонентами. Хорошим примером этого является доступ к базе данных.
+        Spring Boot и Spring Data обеспечивают поддержку репозиториев для различных баз данных, включая JPA-совместимые базы, множество NoSQL-хранилищ данных и как оперативные, так и постоянные хранилища данных. Благодаря Spring разработчики легко могут переходить от одной базы данных к другой, будь то для отдельного приложения или для обширной системы приложений.
+        Чтобы продемонстрировать некоторые гибкие возможности создания ориентированных на данные приложений Spring Boot, мы рассмотрим несколько различных поддерживаемых Spring Boot подходов, где Boot и Spring Data используются для упрощения относящейся к взаимодействию с базой данных части различных, хотя и сходных сервисов.
+
+        Первым будет — JPA, и для этого примера воспользуемся Lombok.
+
+        #### Инициализация проекта
+
+        Обратимся к Spring Initializr. Выберем следующие опции:
+
+        -	проект Maven;
+        -	Java;
+        -	текущая стабильная версия Spring Boot;
+        -	упаковка — JAR;
+        -	Java — 11.
+
+        И зависимости:
+
+        -	Spring Reactive Web (spring-boot-starter-webflux);
+        -	Spring Data JPA (spring-boot-starter-data-jpa);
+        -	MySQL Driver (mysql-connector-java);
+        -	Lombok (lombok).
+
+        Генерируем проект, сохраняем его на локальной машине, разархивируем и открываем в IDE.
+
+
+        Как и предыдущий проект Redis и большинство других примеров из этой главы, любой ориентированный на данные сервис должен уметь обращаться к работающей базе данных. Сценарии Docker для создания и запуска подходящих контейнеризованных движков баз данных вы найдете в прилагаемых к этой книге репозиториях кода.
+
+        ### Разработка JPA-сервиса (MySQL)
+
+        Сравнив пример из 4 главы, который был создан на основе JPA и базы данных H2, и пример выше на основе репозитория Redis, мы увидим, что сервис на основе JPA, использующий MariaDB/MySQL, демонстрирует, как Spring с помощью согласованности повышает производительность разработчиков.
+
+        Описание класса предметной области
+
+        Создадим класс предметной области Aircraft в качестве основного объекта данных. Все проекты будут вращаться около единой темы, с небольшими различиями. Ниже структура JPA класса ориентированного на предметной области Aircraft:
+
+        ```
+        import com.fasterxml.jackson.annotation.JsonProperty;
+        import lombok.AllArgsConstructor;
+        import lombok.Data;
+
+        import lombok.NoArgsConstructor;
+        import javax.persistence.Entity;
+        import javax.persistence.GeneratedValue;
+        import javax.persistence.Id;
+        import java.time.Instant;
+
+        @Entity
+        @Data
+        @NoArgsConstructor
+        @AllArgsConstructor
+        public class Aircraft {
+        @Id
+        @GeneratedValue
+            private Long id;
+
+            private String callsign, squawk, reg, flightno, route, type, category;
+
+        private int altitude, heading, speed;
+            @JsonProperty("vert_rate")
+            private int vertRate;
+            @JsonProperty("selected_altitude")
+            private int selectedAltitude;
+
+            private double lat, lon, barometer;
+            @JsonProperty("polar_distance")
+            private double polarDistance;
+            @JsonProperty("polar_bearing")
+            private double polarBearing;
+
+            @JsonProperty("is_adsb")
+            private boolean isADSB;
+            @JsonProperty("is_on_ground")
+            private boolean isOnGround;
+
+            @JsonProperty("last_seen_time")
+            private Instant lastSeenTime;
+            @JsonProperty("pos_update_time")
+            private Instant posUpdateTime;
+            @JsonProperty("bds40_seen_time")
+            private Instant bds40SeenTime;
+        }
+        ```
+        
+        Эта версия класса `Aircraft` отличается от предыдущих и последующих версий несколькими особенностями.
+        
+        Важно отметить, что все аннотации ``@Entity``, `@Id` и `@GeneratedValue` импортируются из пакета `javax.persistence`. В версии для `Redis` и некоторых других аннотация `@Id` была взята из `org.springframework.data.annotation`.
+        
+        Аннотации уровня класса такие же, как и которые мы встречали в примере, где использовалась поддержка репозиториев `Redis`, лишь `@RedisHash` заменена на JPA-аннотацию `@Entity`.
+        
+        Аннотации уровня полей тоже не изменились, не считая добавления `@GeneratedValue`. Аннотация `@GeneratedValue` означает, что идентификатор генерируется базовым движком базы данных. При необходимости можно указать дополнительные параметры генерации ключа.
+        
+        Для `Redis`, нет необходимости в описании явным образом методов доступа и изменения для переменных-членов типа `Instant`, благодаря чему код класса `Aircraft` остается лаконичным.
+        
+        #### Создание интерфейса репозитория
+        
+        Определяем необходимый интерфейс репозитория, расширяя `CrudRepository` из `Spring Data` и указывая тип хранимого объекта и его ключа — Aircraft и Long в данном случае:
+        
+        ```
+        public interface AircraftRepository extends CrudRepository&lt;Aircraft, Long> {}
+        ```
+       
+        Как Redis, так и JPA базы данных прекрасно работают с уникальными значениями ключей/идентификаторами типа `Long`, так что никаких отличий от описания из предыдущего примера с `Redis` нет.
+        
+        #### Собираем все вместе
+        
+        Создадим компонент для опроса PlaneFinder и настроим его для доступа к базе данных.
+        
+        Опрос сервиса `PlaneFinder`. Снова создадим класс с аннотацией `@Component` Spring Boot для опроса текущих данных о местоположении и обработки получаемых им записей `Aircraft`.
+        
+        Как и в примере выше создадим объект `WebClient`, указывающий на целевую конечную точку, которую представляет сервис PlaneFinder через порт 7634, и присвоим его переменной экземпляра.
+        
+        Как и ожидалось, код очень похож на конечный вид кода для репозитория Redis. Однако, стоит отметить несколько отличий подхода для этого примера.
+        
+        Вместо создания конструктора для получения автоматически связываемого компонента AircraftRepository вручную, запросим у Lombok, посредством его статического генератора кода, конструктор со всеми нужными переменными-членами. Lombok устанавливает, какие аргументы нужны, с помощью двух аннотаций: @RequiredArgsConstructor для класса и @NonNull для переменных-членов, обозначенных как требующие инициализации. При указании аннотации @NonNull для переменной экземпляра AircraftRepository Lombok создает конструктор с AircraftRepository в качестве параметра, а затем Spring Boot автоматически связывает уже существующий компонент репозитория для использования внутри компонента PlaneFinderPoller.
+        
+        Стоит ли удалять ли все хранимые записи из базы данных при каждом опросе, в значительной степени зависит от требований, частоты опроса и механизма хранения. Например, затраты на очистку базы данных в оперативной памяти перед каждым опросом сильно отличаются от затрат на удаление всех записей из таблицы базы, размещенной в облаке. Если опрос будет выполняться часто, это тоже повысит затраты. Альтернатив много, пожалуйста, тщательно взвешивайте, какую выбрать.
+        
+        Переработанный для полноценного использования поддержки Spring Data JPA полный код класса PlaneFinderPoller приведен ниже:
+        
+        ```
+        import lombok.NonNull;
+        import lombok.RequiredArgsConstructor;
+        import org.springframework.scheduling.annotation.EnableScheduling;
+        import org.springframework.scheduling.annotation.Scheduled;
+        import org.springframework.stereotype.Component;
+        import org.springframework.web.reactive.function.client.WebClient;
+
+        @EnableScheduling
+        @Component
+        @RequiredArgsConstructor
+        class PlaneFinderPoller {
+            @NonNull
+            private final AircraftRepository repository;
+            private WebClient client = WebClient.create("http://localhost:7634/aircraft");
+
+            @Scheduled(fixedRate = 1000)
+            private void pollPlanes() {
+                repository.deleteAll();
+                client.get()
+                        .retrieve()
+                        .bodyToFlux(Aircraft.class)
+                        .filter(plane -> !plane.getReg().isEmpty())
+                        .toStream()
+                        .forEach(repository::save);
+
+                repository.findAll().forEach(System.out::println);
+            }
+        }
+        ```
+        
+        Подключение к `MariaDB/MySQL`. При использовании Spring Boot, возможность автоматической конфигурации среды приложения основывается на доступной информации о среде выполнения. Эта гибкость делает Spring Boot исключительно привлекательным для разработчиков. Однако, так как Spring Boot и Spring Data поддерживают множество JPA-совместимых баз данных, необходимо предоставить Spring Boot некоторую важную информацию для успешного соединения с выбранной базой данных для конкретного приложения. Для запущенного сервиса эта информация включает в себя следующие свойства:
+        
+        ```
+        spring.datasource.platform=mysql
+        spring.datasource.url=jdbc:mysql://${MYSQL_HOST:localhost}:3306/mark
+        spring.datasource.username=mark
+        spring.datasource.password=sbux
+        ```
+        
+        Как название базы данных, так и имя пользователя базы в приведенном примере — mark. Замените источник данных, имя пользователя и пароль на соответствующие вашей среде.
+        
+        #### Результаты
+        
+        Не отключая сервис `PlaneFinder`, запустим приложение `sbur-jpa` для получения, сохранения и извлечения информации из MariaDB и отображения на экране результатов каждого из опросов сервиса `PlaneFinder`. Ниже приведен краткий отформатированный пример полученных результатов:
+       
+        ```
+        Aircraft(id=106, callsign=null, squawk=null, reg=N7816B, flightno=WN2117,
+        route=SJC-STL-BWI-FLL, type=B737, category=, altitude=4400, heading=87,
+        speed=233, vertRate=2048, selectedAltitude=15008, lat=0.0, lon=0.0,
+        barometer=1017.6, polarDistance=0.0, polarBearing=0.0, isADSB=false,
+        isOnGround=false, lastSeenTime=2020-11-27T18:59:10Z,
+        posUpdateTime=2020-11-27T18:59:17Z, bds40SeenTime=2020-11-27T18:59:10Z)
+
+        Aircraft(id=107, callsign=null, squawk=null, reg=N963WN, flightno=WN851,
+        route=LAS-DAL-STL-CMH, type=B737, category=, altitude=27200, heading=80,
+        Создание сервиса на основе репозитория с помощью Java Persistence API 131
+        speed=429, vertRate=2112, selectedAltitude=0, lat=0.0, lon=0.0, barometer=0.0,
+        polarDistance=0.0, polarBearing=0.0, isADSB=false, isOnGround=false,
+        lastSeenTime=2020-11-27T18:58:45Z, posUpdateTime=2020-11-27T18:59:17Z,
+        bds40SeenTime=2020-11-27T18:59:17Z)
+
+        Aircraft(id=108, callsign=null, squawk=null, reg=N8563Z, flightno=WN1386,
+        route=DEN-IAD, type=B738, category=, altitude=39000, heading=94, speed=500,
+        vertRate=0, selectedAltitude=39008, lat=0.0, lon=0.0, barometer=1013.6,
+        polarDistance=0.0, polarBearing=0.0, isADSB=false, isOnGround=false,
+        lastSeenTime=2020-11-27T18:59:10Z, posUpdateTime=2020-11-27T18:59:17Z,
+        bds40SeenTime=2020-11-27T18:59:10Z)
+        ```
+        
+        Сервис запрашивает, захватывает и отображает позиции воздушных судов так, как и должен.
+    </markdown>
+</slide>

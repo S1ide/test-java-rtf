@@ -1,0 +1,148 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<slide xmlns="https://ulearn.me/schema/v2" title="Загрузка данных" id="939a5828-4e74-49d0-92ed-3ad03476b5d6">
+    <markdown>
+        До этого момента мы были сосредоточены на взаимодействии с базой данных в смысле передачи данных в приложение. Но что делать если у приложения появляются данные —тестовые данные или данные для наполнения базы, которые необходимо сохранить?
+
+        Spring Boot включает несколько различных механизмов инициализации и заполнения базы данных. Рассмотрим два наиболее удобных подхода.
+
+        -	Использовать сценарии на языках определения данных (Data Definition Language, DDL) и манипулирования данными (Data Manipulation Language, DML) для инициализации и заполнения базы.
+        -	Позволить Spring Boot (с помощью Hibernate) автоматически создать структуру таблиц на основе определенных классов с аннотацией @Entity и заполнять через bean-компонент репозитория.
+
+        Оба из этих подходов имеют свои плюсы и минусы.
+
+        #### Скрипты для конкретных API или базы данных
+
+        Spring Boot ищет по обычным корневым путям к классам файлы, названия которых удовлетворяют следующим шаблонам:
+
+        -	schema.sql;
+        -	data.sql;
+        -	schema-${платформа}.sql;
+        -	data-${платформа}.sql.
+
+        В последние два названия подставляется задаваемое свойство приложения spring.datasource.platform. Допустимые значения: h2, mysql, postgresql и прочие базы данных Spring Data JPA, а сочетание свойства spring.datasource.platform и соответствующих файлов .sql позволяет полноценно использовать синтаксис конкретной базы данных.
+
+        **Создание и заполнение базы данных с помощью сценариев.** Для упрощения использования сценариев для создания и заполнения базы данных MariaDB или MySQL, в каталоге resources проекта sbur-jpa создадим два файла: schemamysql.sql и data-mysql.sql.
+
+        Добавим в schema-mysql.sql следующий DDL для создания схемы таблицы aircraft:
+
+        ```
+        DROP TABLE IF EXISTS aircraft;
+        CREATE TABLE aircraft (id BIGINT not null primary key, callsign VARCHAR(7),
+        squawk VARCHAR(4), reg VARCHAR(6), flightno VARCHAR(10), route VARCHAR(25),
+        type VARCHAR(4), category VARCHAR(2),
+        altitude INT, heading INT, speed INT, vert_rate INT, selected_altitude INT,
+        lat DOUBLE, lon DOUBLE, barometer DOUBLE,
+        polar_distance DOUBLE, polar_bearing DOUBLE,
+        isadsb BOOLEAN, is_on_ground BOOLEAN,
+        last_seen_time TIMESTAMP, pos_update_time TIMESTAMP, bds40seen_time TIMESTAMP);
+        ```
+
+        А чтобы внести в таблицу aircraft одну строку примера данных, добавил в datamysql.sql следующий DML:
+
+        ```
+        INSERT INTO aircraft (id, callsign, squawk, reg, flightno, route, type,
+        category, altitude, heading, speed, vert_rate, selected_altitude, lat, lon,
+        barometer, polar_distance, polar_bearing, isadsb, is_on_ground,
+        last_seen_time, pos_update_time, bds40seen_time)
+        VALUES (81, 'AAL608', '1451', 'N754UW', 'AA608', 'IND-PHX', 'A319', 'A3', 36000,
+        255, 423, 0, 36000, 39.150284, -90.684795, 1012.8, 26.575562, 295.501994,
+        true, false, '2020-11-27 21:29:35', '2020-11-27 21:29:34',
+        '2020-11-27 21:29:27');
+        ```
+
+        По умолчанию Spring Boot автоматически создает структуру таблиц на основе любых классов, снабженных аннотацией @Entity. Переопределить подобное поведение легко с помощью следующих значений свойств из файла application.properties:
+
+        ```
+        spring.datasource.initialization-mode=always
+        spring.jpa.hibernate.ddl-auto=none
+        ```
+
+        Значение always свойства spring.datasource.initialization-mode означает, что приложение будет использовать внешнюю (невстраиваемую) базу данных и должно инициализировать ее при каждом запуске приложения. Значение none свойства spring.jpa.hibernate.ddl-auto отключает автоматическое создание Spring Boot-таблиц на основе снабженных аннотацией @Entity классов.
+        внесем в класс PlaneFinderPoller изменения, чтобы проверить, что таблица aircraft была создана и заполнена с помощью предыдущих сценариев:
+
+        -	закомментируем оператор repository.deleteAll(); в pollPlanes(), чтобы избежать удаления записи, добавляемой в data-mysql.sql;
+        -	закомментируем оператор client.get()..., также в pollPlanes(). В результате для упрощения проверки никакие дополнительные записи не извлекаются ине создаются в результате опроса внешнего сервиса PlaneFinder.
+
+        При перезапуске сервиса sbur-jpa получаем следующие результаты (значения полей id могут отличаться):
+
+        ```
+        Aircraft(id=81, callsign=AAL608, squawk=1451, reg=N754UW, flightno=AA608,
+        route=IND-PHX, type=A319, category=A3, altitude=36000, heading=255, speed=423,
+        vertRate=0, selectedAltitude=36000, lat=39.150284, lon=-90.684795,
+        barometer=1012.8, polarDistance=26.575562, polarBearing=295.501994, isADSB=true,
+        isOnGround=false, lastSeenTime=2020-11-27T21:29:35Z,
+        posUpdateTime=2020-11-27T21:29:34Z, bds40SeenTime=2020-11-27T21:29:27Z)
+        ```
+
+        Рассмотри плюсы и минусы этого метода создания и заполнения таблицы.
+
+        Плюсы:
+        -	возможность непосредственного использования SQL-сценариев, как DDL, так и DML, в том числе уже существующих, и/или накопленного опыта работы с SQL;
+        -	возможность использования особенностей синтаксиса языка SQL конкретной базы данных.
+
+        Минусы:
+        -	SQL-файлы можно применять только для поддерживающих язык SQL реляционных баз данных.
+        -	Сценарии могут использовать особенности синтаксиса SQL конкретной базы данных, а значит, при переходе на другую базу данных может потребоваться их модификация.
+        -	Для переопределения поведения Boot по умолчанию необходимо задать несколько свойств приложения, а точнее два.
+
+        #### Заполнение базы данных с помощью репозитория приложения
+
+        Есть другой способ: создание структуры таблиц (если их еще не существует) с использованием поведения Spring Boot по умолчанию и заполнение их образцами данных при поддержке репозиториев приложением.
+
+        Закомментируем два только что добавленных в файл application.properties свойства, чтобы восстановить поведение Spring Boot по умолчанию (создание таблицы aircraft на основе снабженного аннотацией @Entity JPA-класса):
+
+        ```
+        #spring.datasource.initialization-mode=always
+        #spring.jpa.hibernate.ddl-auto=none
+        ```
+
+        Без них Spring Boot не будет искать и выполнять data-mysql.sql или другие сценарии начального заполнения данными.
+
+        Создадим класс DataLoader. Добавим ему аннотации уровня класса @Component (чтобы Spring создал компонент DataLoader) и @AllArgsConstructor (чтобы Lombok создал конструктор, включающий по параметру для каждой переменной экземпляра). И добавим еще одну переменную-член для компонента AircraftRepository, который Spring Boot автоматически связывает посредством внедрения зависимости через конструктор:
+
+        ```
+        private final AircraftRepository repository;
+        ```
+
+        Метод loadData() для очистки таблицы aircraft и ее наполнения данными:
+
+        ```
+        @PostConstruct
+        private void loadData() {
+        repository.deleteAll();
+        repository.save(new Aircraft(81L,
+        "AAL608", "1451", "N754UW", "AA608", "IND-PHX", "A319", "A3",
+        36000, 255, 423, 0, 36000,
+        39.150284, -90.684795, 1012.8, 26.575562, 295.501994,
+        true, false,
+        Instant.parse("2020-11-27T21:29:35Z"),
+        Instant.parse("2020-11-27T21:29:34Z"),
+        Instant.parse("2020-11-27T21:29:27Z")));
+        }
+        ```
+
+        Теперь при перезапуске сервиса sbur-jpa получим следующие результаты (значения полей id могут отличаться):
+
+        ```
+        Aircraft(id=110, callsign=AAL608, squawk=1451, reg=N754UW, flightno=AA608,
+        route=IND-PHX, type=A319, category=A3, altitude=36000, heading=255, speed=423,
+        vertRate=0, selectedAltitude=36000, lat=39.150284, lon=-90.684795,
+        barometer=1012.8, polarDistance=26.575562, polarBearing=295.501994, isADSB=true,
+        isOnGround=false, lastSeenTime=2020-11-27T21:29:35Z,
+        posUpdateTime=2020-11-27T21:29:34Z, bds40SeenTime=2020-11-27T21:29:27Z)
+        ```
+
+        Единственная сохраненная запись — та, что описана в упомянутом ранее классе DataLoader, с одним небольшим отличием: поскольку поле id генерируется базой данных (это определено в спецификации класса предметной области Aircraft), движок базы данных заменяет передаваемое значение id при сохранении записи.
+
+        Преимущества подхода:
+
+        -	Полная независимость от используемой базы данных.
+        -	Весь относящийся к конкретной базе данных код или аннотации находятся внутри приложения — для поддержки доступа к базе данных.
+        -	Для отключения достаточно просто закомментировать аннотацию @Component класса DataLoader.
+
+        #### Другие механизмы
+
+        Данные варианты инициализации и наполнения базы данных дают большие возможности и широко применяются, однако существуют и другие. Например, использование поддержки Hibernate для файла import.sql (аналогично описанному ранее подходу JPA), использование внешних импортов, FlywayDB и др.
+
+    </markdown>
+</slide>

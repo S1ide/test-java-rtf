@@ -1,0 +1,172 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<slide xmlns="https://ulearn.me/schema/v2" title="Создание сервиса на основе репозитория с помощью PostgreSQL" id="978a2123-d55a-48ed-b29d-15911d2480cc">
+    <markdown>
+        PostgreSQL предпочтительно используется для развертывания высоконагруженных сложных корпоративных систем, платформ сбора и анализа данных, финансовых сервисов и других критически важных систем, а не для сайтов или приложений с небольшим числом пользователей. Обычно она решает бизнес-задачи в сферах, где простои в работе могут привести к финансовым и репутационным потерям, таких как ритейл, электронная коммерция, энергетика, промышленность, финансы, страхование, образование и IT-компании.
+
+        #### Инициализация проекта
+
+        И снова обратимся к Spring Initializr. На этот раз я выбрал следующие опции:
+
+        -	проект Maven;
+        -	Java;
+        -	текущая стабильная версия Spring Boot;
+        -	упаковка — JAR;
+        -	Java — 21.
+
+        И зависимости:
+
+        -	Spring Reactive Web (spring-boot-starter-webflux);
+        -	Spring Data JPA (spring-boot-starter-data-jpa);
+        -	PostgreSQL Driver(postgresql);
+        -	Lombok (lombok).
+
+        Далее генерируем проект, сохраняем его на локальной машине, разархивируем и открываем в IDE.
+
+        ### Разработка JPA-сервиса (PostgreSQL)
+
+        При сравнении примера из главы 4, построенного на основе JPA и базы данных H2, с предыдущим примером, использующим репозиторий Redis, мы видим, что сервис на базе JPA, работающий с MariaDB/MySQL, наглядно демонстрирует, как Spring согласованно повышает производительность разработчиков.
+
+        #### Описание класса предметной области
+
+        В рамках данной главы я приступаю к разработке класса Aircraft в качестве основного объекта данных для всех проектов. Все эти проекты будут тесно связаны между собой и иметь небольшие отличия. Далее приведена структура класса Aircraft, ориентированного на использование технологии JPA:
+
+        ```
+        import com.fasterxml.jackson.annotation.JsonProperty;
+        import lombok.AllArgsConstructor;
+        import lombok.Data;
+        import lombok.NoArgsConstructor;
+        import javax.persistence.Entity;
+        import javax.persistence.GeneratedValue;
+        import javax.persistence.Id;
+        import java.time.Instant;
+        @Entity
+        @Data
+        @NoArgsConstructor
+        @AllArgsConstructor
+        public class Aircraft {
+        @Id
+        @GeneratedValue
+        private Long id;
+        private String callsign, squawk, reg, flightno, route, type, category;
+        private int altitude, heading, speed;
+        @JsonProperty("vert_rate")
+        private int vertRate;
+        @JsonProperty("selected_altitude")
+        private int selectedAltitude;
+        private double lat, lon, barometer;
+        @JsonProperty("polar_distance")
+        private double polarDistance;
+        @JsonProperty("polar_bearing")
+        private double polarBearing;
+        @JsonProperty("is_adsb")
+        private boolean isADSB;
+        @JsonProperty("is_on_ground")
+        private boolean isOnGround;
+        @JsonProperty("last_seen_time")
+        private Instant lastSeenTime;
+        @JsonProperty("pos_update_time")
+        private Instant posUpdateTime;
+        @JsonProperty("bds40_seen_time")
+        private Instant bds40SeenTime;
+        }
+        ```
+
+        Эта версия класса Aircraft имеет несколько особенностей, которые следует отметить по сравнению с предыдущими и последующими версиями.
+
+        В этой версии все аннотации @Entity, @Id и @GeneratedValue импортируются из пакета javax.persistence. В предыдущей версии для Redis и некоторых других использовалась аннотация @Id из пакета org.springframework.data.annotation.
+
+        Аннотации на уровне класса подобны тем, которые мы встречали в примере, где использовалась поддержка репозиториев Redis, только аннотация @RedisHash заменена на JPA-аннотацию @Entity. Для воспоминания об аннотациях, которые остались неизменными, можно обратиться к предыдущему разделу.
+
+        Аннотации на уровне полей также не изменились, за исключением добавления аннотации @GeneratedValue. Из названия аннотации @GeneratedValue понятно, что она означает генерацию идентификатора базой данных. При необходимости разработчик может указать дополнительные параметры для генерации ключа, но в данном случае достаточно использовать саму аннотацию.
+
+        Также, как и при использовании поддержки Spring Data-репозиториев для Redis, нет необходимости явно описывать методы доступа и изменения для переменных типа Instant. Это позволяет сделать код класса Aircraft более лаконичным.
+
+        #### Создание интерфейса репозитория
+
+        Продолжая, мы задаем интерфейс репозитория, который наследует CrudRepository из Spring Data. В данном случае мы указываем тип хранимого объекта (Aircraft) и его ключ (Long):
+
+        ```
+        public interface AircraftRepository extends CrudRepository&lt;Aircraft, Long> {}
+        ```
+
+        #### Собираем все вместе
+
+        Пришло время создать компонент для опроса PlaneFinder и настроить его для доступа к базе данных.
+
+        **Опрос сервиса PlaneFinder.** Мы разработали класс с аннотацией @Component Spring Boot, который позволяет получать текущую информацию о местоположении и обрабатывать записи о самолетах.
+
+        Как и в предыдущем примере, мф использовали объект WebClient, указывающий на целевую конечную точку сервиса PlaneFinder через порт 7634, и присвоили его переменной экземпляра.
+
+        Как и ожидалось, код для реализации этого компонента очень похож на код для репозитория Redis. Однако есть несколько отличий.
+
+        Вместо того чтобы создавать конструктор для получения компонента AircraftRepository, который позволяет автоматическую связь, воспользуемся Lombok - статическим генератором кода, чтобы создать конструктор с необходимыми переменными-членами. Lombok определяет требуемые аргументы с помощью аннотаций: @RequiredArgsConstructor для класса и @NonNull для переменных-членов, которые требуют инициализации. При использовании аннотации @NonNull для переменной экземпляра AircraftRepository, Lombok создает конструктор с AircraftRepository в качестве параметра, а затем Spring Boot автоматически связывает уже существующий компонент репозитория для использования внутри компонента PlaneFinderPoller.
+
+        Возвращаясь к тонкостям оставшегося кода PlaneFinderPoller: пожалуйста, пересмотрите еще раз соответствующий раздел из дискуссии о поддержке репозиториев Redis. Приведенный ниже код класса PlaneFinderPoller был адаптирован для полноценного использования поддержки Spring Data JPA:
+
+        ```
+        import lombok.NonNull;
+        import lombok.RequiredArgsConstructor;
+        import org.springframework.scheduling.annotation.EnableScheduling;
+        import org.springframework.scheduling.annotation.Scheduled;
+        import org.springframework.stereotype.Component;
+        import org.springframework.web.reactive.function.client.WebClient;
+        @EnableScheduling
+        @Component
+        @RequiredArgsConstructor
+        class PlaneFinderPoller {
+        @NonNull
+        private final AircraftRepository repository;
+        private WebClient client =
+        WebClient.create("http://localhost:7634/aircraft");
+        @Scheduled(fixedRate = 1000)
+        private void pollPlanes() {
+        repository.deleteAll();
+        client.get()
+        .retrieve()
+        .bodyToFlux(Aircraft.class)
+        .filter(plane -> !plane.getReg().isEmpty())
+        .toStream()
+        .forEach(repository::save);
+        repository.findAll().forEach(System.out::println);
+        }
+        }
+        ```
+
+        **Подключение к PostgreSQL.** Spring Boot имеет универсальный подход к настройке подключения к PostgreSQL. Он автоматически адаптирует конфигурацию на основе доступной информации о среде выполнения, что придает ему невероятную гибкость. Так как Spring Boot и Spring Data поддерживают множество баз данных, совместимых с JPA, необходимо предоставить некоторую важную информацию для безупречного соединения с выбранной базой данных для конкретного приложения. Для текущего сервиса в среде включены следующие свойства:
+
+        ```
+        spring.datasource.url=jdbc:postgresql://localhost:5432/ mark
+        spring.datasource.username=username
+        spring.datasource.password=password
+        spring.jpa.generate-ddl=true
+        ```
+
+        #### Результаты
+
+        Мы использовали сервис PlaneFinder вместе с приложением sbur-jpa, чтобы получать, сохранять и извлекать информацию из PostgreSQL. Кроме этого, мы также смогли отобразить результаты каждого опроса сервиса PlaneFinder на экране. Далее приведем пример полученных результатов, сокращенный и немного отформатированный для удобства чтения:
+
+        ```
+        Aircraft(id=106, callsign=null, squawk=null, reg=N7816B, flightno=WN2117,
+        route=SJC-STL-BWI-FLL, type=B737, category=, altitude=4400, heading=87,
+        speed=233, vertRate=2048, selectedAltitude=15008, lat=0.0, lon=0.0,
+        barometer=1017.6, polarDistance=0.0, polarBearing=0.0, isADSB=false,
+        isOnGround=false, lastSeenTime=2020-11-27T18:59:10Z,
+        posUpdateTime=2020-11-27T18:59:17Z, bds40SeenTime=2020-11-27T18:59:10Z)
+        Aircraft(id=107, callsign=null, squawk=null, reg=N963WN, flightno=WN851,
+        route=LAS-DAL-STL-CMH, type=B737, category=, altitude=27200, heading=80,
+        Создание сервиса на основе репозитория с помощью Java Persistence API 131
+        speed=429, vertRate=2112, selectedAltitude=0, lat=0.0, lon=0.0, barometer=0.0,
+        polarDistance=0.0, polarBearing=0.0, isADSB=false, isOnGround=false,
+        lastSeenTime=2020-11-27T18:58:45Z, posUpdateTime=2020-11-27T18:59:17Z,
+        bds40SeenTime=2020-11-27T18:59:17Z)
+        Aircraft(id=108, callsign=null, squawk=null, reg=N8563Z, flightno=WN1386,
+        route=DEN-IAD, type=B738, category=, altitude=39000, heading=94, speed=500,
+        vertRate=0, selectedAltitude=39008, lat=0.0, lon=0.0, barometer=1013.6,
+        polarDistance=0.0, polarBearing=0.0, isADSB=false, isOnGround=false,
+        lastSeenTime=2020-11-27T18:59:10Z, posUpdateTime=2020-11-27T18:59:17Z,
+        bds40SeenTime=2020-11-27T18:59:10Z)
+        ```
+
+        Сервис запрашивает, захватывает и отображает позиции воздушных судов так, как и должен.
+    </markdown>
+</slide>

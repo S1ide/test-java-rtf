@@ -1,0 +1,225 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<slide xmlns="https://ulearn.me/schema/v2" title="Рефакторинг приложения Aircraft Positions" id="bc9f90bf-0b8b-47d3-a99b-a5f8021b4164">
+    <markdown>
+        Хоть мы и рассказываем о приложении Aircraft Positions как о целостном, однако проект aircraft-positions включает как серверное приложение Spring Boot + Java, так и функциональность клиентской части на HTML + JavaScript. Во время разработки обе его части работают в одной среде. Но хоть они и собираются, тестируются и развертываются в производственной среде как одно целое, выполнение приложения в продакшене делится следующим образом.
+
+        -	Код Spring + Java для серверной части работает в облаке, при необходимости включая шаблонизатор, генерирующий итоговые веб-страницы для отображения конечному пользователю.
+        -	HTML + JavaScript клиентской части — статический и/или генерируемый динамически контент — отображается и выполняется в браузере конечного пользователя, где бы он ни находился.
+
+        Сейчас мы добавили в систему возможность автоматически отображать местоположение воздушных судов по мере поступления данных в режиме реального времени, а не меняли существующую функциональность. С помощью соединения WebSocket между клиентским и прикладным приложениями можно отправлять обновления в браузер конечного пользователя и выполнять обновление отображения автоматически, не запуская его вручную.
+
+        #### Дополнительные зависимости
+
+        Чтобы включить функциональности WebSocket в приложение Aircraft Positions добавим в его файл pom.xml всего одну зависимость:
+
+        ```
+        &lt;dependency>
+            &lt;groupId>org.springframework.boot&lt;/groupId>
+            &lt;artifactId>spring-boot-starter-websocket&lt;/artifactId>
+        &lt;/dependency>
+        ```
+        
+        #### Обработка соединений и сообщений WebSocket
+
+        В Spring существуют различные подходы к настройке и использованию WebSocket, мы воспользуемся путем непосредственной реализации на основе интерфейса WebSocketHandler. Из-за часто возникающей необходимости обмена текстовой, то есть недвоичной, информацией был создан класс TextWebSocketHandler, на нем и будет основан наш код:
+
+        ```
+        @RequiredArgsConstructor
+        @Component
+        public class WebSocketHandler extends TextWebSocketHandler {
+            private final List sessionList = new ArrayList&lt;>();
+            @NonNull
+            private final AircraftRepository repository;
+
+            public List getSessionList() {
+                return sessionList;
+            }
+
+            @Override
+            public void afterConnectionEstablished(WebSocketSession session)
+                    throws Exception {
+                sessionList.add(session);
+                System.out.println("Connection established from " + session.toString() +
+                    " @ " + Instant.now().toString());
+            }
+        }
+
+        @Override
+        protected void handleTextMessage(WebSocketSession session,
+                TextMessage message) throws Exception {
+            try {
+                System.out.println("Message received: '" +
+                    message + "', from " + session.toString());
+
+                for (WebSocketSession sessionInList : sessionList) {
+                    if (sessionInList != session) {
+                        sessionInList.sendMessage(message);
+                        System.out.println("--> Sending message '"
+                            + message + "' to " + sessionInList.toString());
+                    }
+                }
+            } catch (Exception e) {
+                    System.out.println("Exception handling message: " +
+                e.getLocalizedMessage());
+            }
+        }
+
+        @Override
+        public void afterConnectionClosed(WebSocketSession session,
+                    CloseStatus status) throws Exception {
+                sessionList.remove(session);
+                System.out.println("Connection closed by " + session.toString() +
+                    " @ " + Instant.now().toString());
+            }
+        }
+        ```
+
+        В коде выше реализованы два метода интерфейса WebSocketHandler, afterConnectionEstablished и afterConnectionClosed, для ведения списка активных WebSocketSession и журналирования подключений/отключений. Также мы добавили метод handleTextMessage для транслирования всех входящих сообщений во все прочие активные сеансы. Один этот класс обеспечивает функциональность WebSocket для серверной части, готовой к началу работы при получении местоположения воздушных судов от PlaneFinder через RabbitMQ.
+
+        #### Передача местоположения воздушных судов на соединения WebSocket
+
+        Ранняя версия класса PositionRetriever потребляла полученные через сообщения RabbitMQ списки местоположения воздушных судов и сохраняла их в базе данных H2 в оперативной памяти. Заменим предназначенный для подтверждения вызов System.out::println вызовом нового метода sendPositions(), задача которого отправка свежего списка местоположения воздушных судов с помощью добавленного компонента @Autowired WebSocketHandler всем подключенным по WebSocket клиентам:
+
+        ```
+        @AllArgsConstructor
+        @Configuration
+        public class PositionRetriever {
+            private final AircraftRepository repository;
+            private final WebSocketHandler handler;
+
+            @Bean
+            Consumer&lt;List> retrieveAircraftPositions() {
+                return acList -> {
+                    repository.deleteAll();
+
+                    repository.saveAll(acList);
+                    sendPositions();
+                };
+            }
+
+            private void sendPositions() {
+                if (repository.count() > 0) {
+                    for (WebSocketSession sessionInList : handler.getSessionList()) {
+                        try {
+                            sessionInList.sendMessage(
+                                new TextMessage(repository.findAll().toString())
+                            );
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
+        }
+        ```
+
+        Далее необходимо научить серверную часть приложения прослушивать и принимать запросы на соединения. Для этого зарегистрируем созданный ранее WebSocketHandler через интерфейс WebSocketConfigurer и снабдим новый класс @Configuration аннотацией @EnableWebSocket, чтобы наше приложение обрабатывало запросы WebSocket:
+
+        ```
+        @Configuration
+        @EnableWebSocket
+        public class WebSocketConfig implements WebSocketConfigurer {
+            private final WebSocketHandler handler;
+
+            WebSocketConfig(WebSocketHandler handler) {
+                this.handler = handler;
+            }
+
+            @Override
+            public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
+                    registry.addHandler(handler, "/ws");
+            }
+        }
+        ```
+
+        В методе `registerWebSocketHandlers` свяжем компонент `WebSocketHandler` созданный ранее с конечной точкой ws:///ws. Приложение будет прослушивать в ней HTTPзапросы с заголовками upgrade WebSocket и выполнять нужные действия при их получении.
+
+        Если ваше приложение работает с протоколом HTTPS, вместо ws:// необходимо использовать wss:// (WebSocket Secure).
+
+        #### WebSocket в серверной части, WebSocket в клиентской части
+
+        Завершив работу в серверной части, переходим к функциональности клиентской части.
+
+        Благодаря WebSocket приложение прикладной части может выталкивать обновления без запроса со стороны пользователей и их браузеров. Для демонстрации я создадим следующий HTTP-файл с одним тегом div и label, а также несколькими строками кода на JavaScript и поместим его в каталог src/ main/resources/static рядом с уже существующим файлом index.html:
+
+        ```
+            &lt;!DOCTYPE html>
+            &lt;html lang="en">
+                &lt;head>
+                    &lt;meta charset="UTF-8">
+                    &lt;title>Aircraft Position Report (Live Updates)&lt;/title>
+                    &lt;script>
+                        var socket = new WebSocket(‘ws://' + window. location.host + ‘/ws');
+                        socket.onopen = function () {
+                        console.log(
+                        ‘WebSocket connection is open for business, bienvenidos!’);
+                        };
+                        socket .onmessage = function (message) {
+                        var text = “”;
+                        var arrAC = message.data.split(“Aircraft");
+                        var ac = “”;
+                        for (i = 1; i &lt; arrAC.length; i++) {
+                        ac = (arrAC[i].endswith(", “))
+                        ? arrAC[i].substring(0, arrAC[i].length - 2)
+                        : arrac[i]
+                        text += “Aircraft” + ac + “\n\n";
+                        }
+                        document.getElementById(“positions”).innerText = text;
+                        };
+                        socket.onclose = function () {
+                        console. log(‘WebSocket connection closed, hasta la próxima!');
+                        };
+                    &lt;/script>
+                &lt;/head>
+                &lt;body>
+                    &lt;h1>Current Aircraft Positions&lt;/h1>
+                    &lt;div style="border-style: solid; border-width: 2px; margin-top: 15px;
+                            margin-bottom: 15px; margin-left: 15px; margin-right: 15px;">
+                        &lt;label id=“positions">&lt;/label>
+                &lt;/div>
+            &lt;/body>
+        &lt;/html>
+        ```
+        
+        Функции socket.onopen и socket.onclose предназначены для журналирования, их можно опустить. Несколько ключевых нюансов:
+
+        -	определение тегов div и label внизу HTML;
+        -	переменная socket, устанавливающая WebSocket-соединение и используемая для ссылки на WebSocket-соединение;
+        -	функция socket.onmessage, производящая разбор списка местоположений воздушных судов и присваивающая результат в другом формате полю innerText HTML-элемента с меткой positions.
+
+        После сборки проекта заново и его запуска, можно будет обращаться к странице wspositions.html непосредственно из браузера. Однако, не зная точного адреса невозможно обратиться к странице и ее функциональности, а это не лучший способ создания приложений для реального использования.
+
+        Добавим еще одну строку в существующий файл index.html, чтобы пользователь мог перейти на управляемую WebSocket страницу wspositions.html к уже существующей:
+
+        ```
+        &lt;!DOCTYPE html>
+        &lt;html lang="en">
+            &lt;head>
+                &lt;meta charset="UTF-8">
+                &lt;title>Retrieve Aircraft Position Report&lt;/title>
+            &lt;/head>
+            &lt;body>
+                &lt;p>&lt;a href="/aircraft">Click here&lt;/a> to retrieve current aircraft positions
+                    in range of receiver.&lt;/p>
+                &lt;p>&lt;a href="/wspositions.html">Click here&lt;/a> to retrieve a livestream of
+                    current aircraft positions in range of receiver.&lt;/p>
+            &lt;/body>
+        &lt;/html>
+
+        ```
+
+        Завершив реализацию функциональности в клиентской части, протестируем WebSocket.
+
+        ### Результаты
+
+        Запустим из IDE приложение Aircraft Positions и PlaneFinder. Откроем окно браузера и обратимся к приложению клиентской части по адресу localhost:8080 (рис. 7.3).
+
+        ![](https://i.imgur.com/Swzqjv4.png "Рис. 3")
+
+        Выбираем на целевой странице второй вариант — Click here to retrieve a livestream of current aircraft positions in range of receiver, после этого генерируется страница wspositions.html (рис 7.4).
+
+        ![](https://i.imgur.com/vtOPXs8.png "Рис. 4")
+
+        Вполне можно собирать и запускать приложения PlaneFinder и Aircraft Positions из командной строки. Однако в большинстве циклов сборки/запуска намного быстрее запускать приложения и выполнять отладку непосредственно из IDE.
+    </markdown>
+</slide>

@@ -1,0 +1,240 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<slide xmlns="https://ulearn.me/schema/v2" title="Создание сервиса на основе репозитория с помощью документоориентированной базы данных NoSQL" id="afd4daed-9243-41d0-9c41-4b01caf33d7d">
+    <markdown>
+        Существует несколько способов повысить производительность при создании приложений с помощью Spring Boot. Первый — это воспользоваться Kotlin в качестве основного языка приложения, чтобы сделать код лаконичным.
+
+        К счастью, у языка Kotlin немало общего с языком Java, поэтому нескольких пояснений в расхождениях будет достаточно, чтобы адаптироваться к его особенностям.
+
+        Воспользуемся MongoDB. Она популярна и широко применяется:  прекрасно работает и в целом облегчает разработчикам хранение, обработку и извлечение данных разнообразных и нередко довольно запутанных форм. MongoDB — одна из первых баз данных, у которой появились реактивные драйверы, в результате чего вся отрасль перешла на неблокирующий доступ вплоть до уровня базы данных.
+
+        ### Инициализация проекта
+
+        Сначала мы снова обратимся к Spring Initializr. Выберем опции (рис. 6.1), немного отличающиеся от заданных раньше:
+
+        -	проект Gradle;
+        -	Kotlin;
+        -	текущая стабильная версия Spring Boot;
+        -	упаковка — JAR;
+        -	Java — 11.
+
+        Зависимости:
+
+        -	Spring Reactive Web (spring-boot-starter-webflux);
+        -	Spring Data MongoDB (spring-boot-starter-data-mongodb);
+        -	Embedded MongoDB Database (de.flapdoodle.embed.mongo).
+
+        Сгенерируем проект, сохраним его на локальной машине, разархивируем и откроем в IDE.
+
+        ![](https://i.imgur.com/omA8GWS.png "Рис. 1")
+
+        Есть несколько нюансов, которые связаны с данными вариантами:
+
+        Gradle взят в качестве системы сборки этого проекта, потому что если выбрать его вместе с Kotlin в проекте Spring Boot, то файл сборки Gradle будет использовать DSL Kotlin, поддерживаемый командой Gradle наравне с DSL Groovy.
+
+        Итоговый файл сборки называется build.gradle.kts — расширение .kts означает скрипт Kotlin, а не файл Gradle build.gradle.
+
+        Maven также подходит в качестве системы сборки для приложений Spring Boot + Kotlin, но как декларативная система сборки на основе XML не использует непосредственно Kotlin или какой-либо другой язык.
+
+        Воспользуемся для этого приложения наличием стартового пакета Spring Boot для встраиваемой базы данных MongoDB. Так как встраиваемый экземпляр MongoDB предназначен исключительно для тестирования, лучше его не задействовать для продакшена. Однако он прекрасно подходит для демонстрации работы Spring Boot и Spring Data с MongoDB и обладает всеми возможностями развернутой на локальной машине базы данных, не требуя дополнительной установки или запуска контейнеризованного экземпляра MongoDB. Одно действие, которое вам нужно сделать для использования встраиваемой базы данных из не предназначенного для тестирования кода — заменить одну строку в файле build.gradle.kts:
+
+        ```
+        testImplementation("de.flapdoodle.embed:de.flapdoodle.embed.mongo")
+        ```
+
+        Заменяем на:
+
+        ```
+        implementation("de.flapdoodle.embed:de.flapdoodle.embed.mongo")
+        ```
+
+        Теперь для создания сервиса все готово.
+
+        ### Разработка сервиса MongoDB
+
+        Сервис на основе MongoDB предлагает очень схожий подход, несмотря на то, что в качестве основного языка используется Kotlin, а не Java.
+
+        #### Описание класса предметной области
+
+        Создадим класс предметной области Aircraft на языке Kotlin в качестве основного объекта данных проекта.
+
+        Структура нового класса предметной области Aircraft и несколько примечаний:
+
+        ```
+        import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+        import com.fasterxml.jackson.annotation.JsonProperty
+        import org.springframework.data.annotation.Id
+        import org.springframework.data.mongodb.core.mapping.Document
+        import java.time.Instant
+
+        @Document
+        @JsonIgnoreProperties(ignoreUnknown = true)
+        data class Aircraft(
+            @Id val id: String,
+            val callsign: String? = "",
+            val squawk: String? = "",
+            val reg: String? = "",
+            val flightno: String? = "",
+            val route: String? = "",
+            val type: String? = "",
+            val category: String? = "",
+            val altitude: Int? = 0,
+            val heading: Int? = 0,
+            val speed: Int? = 0,
+            @JsonProperty("vert_rate") val vertRate: Int? = 0,
+            @JsonProperty("selected_altitude")
+            val selectedAltitude: Int? = 0,
+            val lat: Double? = 0.0,
+            val lon: Double? = 0.0,
+            val barometer: Double? = 0.0,
+            @JsonProperty("polar_distance")
+            val polarDistance: Double? = 0.0,
+            @JsonProperty("polar_bearing")
+            val polarBearing: Double? = 0.0,
+            @JsonProperty("is_adsb")
+            val isADSB: Boolean? = false,
+            @JsonProperty("is_on_ground")
+            val isOnGround: Boolean? = false,
+            @JsonProperty("last_seen_time")
+            val lastSeenTime: Instant? = Instant.ofEpochSecond(0),
+            @JsonProperty("pos_update_time")
+            val posUpdateTime: Instant? = Instant.ofEpochSecond(0),
+            @JsonProperty("bds40_seen_time")
+            val bds40SeenTime: Instant? = Instant.ofEpochSecond(0)
+        )
+        ```
+
+        Отметим отсутствие фигурных скобок, что значит, что у этого класса отсутствует тело. Kotlin не их требует, потому что, если поместить в тело класса (интерфейса) нечего, фигурные скобки никакой пользы не принесут.
+
+        Второй нюанс: множество операций присваивания в круглых скобках, стоящих после имени класса. Основной конструктор класса языка Kotlin часто записывают подобным образом — в заголовке класса, сразу за его названием.
+
+        Пример полной формальной записи:
+
+        ```
+        class Aircraft constructor(&lt;параметр_1>,&lt;параметр_2>,...,&lt;параметр_n>)
+        ```
+
+        Четко различимые повторяющиеся шаблоны можно сжать, так часто бывает в языке Kotlin. Удаление ключевого слова constructor перед списком параметров не дает перепутать его с другой конструкцией языка, поэтому оно необязательно.
+
+        Внутри конструктора перечислены параметры: параметр, перед которым указано ключевое слово var (в случае допускающих многократное присваивание изменяемых переменных) или val (в случае однократно присваиваемых значений), становится свойством. Свойство Kotlin по функциональности идентично переменной-члену языка Java, ее методу доступа и методу изменения.
+
+        Значения с типами, содержащими знак вопроса (Double?) — это необязательные, соответствующие параметры конструктора можно опустить. В таком случае параметру присваивается значение по умолчанию, указанное после знака равенства (=).
+
+        Параметры и свойства методов языка Kotlin, и конструкторы в том числе, могут включать аннотации. @Id и @JsonProperty выполняют те же функции, что и в приведенных ранее примерах.
+
+        Про аннотации уровня класса: @Document указывает MongoDB, что нужно сохранять каждый объект типа Aircraft в виде отдельного документа в базе данных. @JsonIgnoreProperties(ignoreUnknown = true) придает сервису sbur_mongo гибкости: если в какой-то момент в поток данных от расположенного выше по конвейеру сервиса PlaneFinder будут добавлены дополнительные поля, они станут игнорироваться и sbur_mongo продолжит работать без каких-либо проблем.
+
+        Слова data. Существует несколько способов создания так называемых классов данных. Kotlin включил эту возможность в сам язык и добавил ключевое слово data, показывающее, что класс данных автоматически наследует от всех объявленных в основном конструкторе свойств:
+
+        -	функции equals() и hashCode() (в языке Java — методы, в Kotlin — функции);
+        -	toString();
+        -	по одной функции componentN() для каждого свойства в порядке их объявления;
+        -	функцию copy().
+
+        У классов данных Kotlin есть определенные требования и ограничения. Подробности про них можно посмотреть в документации Kotlin по классам данных.
+
+        Еще одно интересное отличие — тип поля/свойства id местоположения каждого из воздушных судов. В Redis и JPA использовался тип Long, а в MongoDB для уникальных идентификаторов документов применяется тип String.
+
+        #### Создание интерфейса репозитория
+
+        Опишем необходимый интерфейс репозитория, расширяющий интерфейс CrudRepository Spring Data, укажем тип хранимого объекта и его уникального идентификатора — Aircraft и String.
+
+        ```
+        interface AircraftRepository: CrudRepository&lt;Aircraft, String>
+        ```
+
+        Две интересные вещи в описании интерфейса:
+
+        1. В языке Kotlin из-за отсутствия тела интерфейса не нужны фигурные скобки. Если ваша IDE добавляет их при создании этого интерфейса, можете их удалить.
+        2. Использование двоеточия (:) в зависимости от контекста для указания типа val или var или указания того, что интерфейс расширяет или реализует другой.
+
+        Существует интерфейс MongoRepository, расширяющий как интерфейс PagingAndSortingRepository (он, в свою очередь, расширяет CrudRepository), так и QueryByExampleExecutor, который можно использовать вместо CrudRepository, как здесь. Но если никаких дополнительных возможностей не требуется, стоит писать интерфейс как можно более высокого уровня, удовлетворяющий всем требованиям. В данном случае интерфейса CrudRepository вполне достаточно.
+
+        #### Собираем все вместе
+
+        Следующим шагом создадим компонент для периодического опроса сервиса PlaneFinder.
+
+        **Опрос PlaneFinder.** Создадим класс компонента PlaneFinderPoller Spring Boot для опроса на предмет данных о текущем местоположении Aircraft и обработки всех полученных записей:
+
+        ```
+        import org.springframework.scheduling.annotation.EnableScheduling
+        import org.springframework.scheduling.annotation.Scheduled
+        import org.springframework.stereotype.Component
+        import org.springframework.web.reactive.function.client.WebClient
+        import org.springframework.web.reactive.function.client.bodyToFlux
+
+        @Component
+        @EnableScheduling
+        class PlaneFinderPoller(private val repository: AircraftRepository) {
+            private val client = WebClient.create("http://localhost:7634/aircraft")
+
+            @Scheduled(fixedRate = 1000)
+                private fun pollPlanes() {
+                repository.deleteAll()
+
+                client.get()
+                    .retrieve()
+                    .bodyToFlux&lt;Aircraft>()
+                    .filter { !it.reg.isNullOrEmpty() }
+                    .toStream()
+                    .forEach { repository.save(it) }
+
+                println("--- All aircraft ---")
+                repository.findAll().forEach { println(it) }
+            }
+        }
+        ```
+
+        В заголовке был создан основной конструктор с параметром AircraftRepository. Spring Boot автоматически связывает существующий компонент AircraftRepository в компонент PlaneFinderPoller, помеченный ключевыми словами private val, для обеспечения:
+
+        -	невозможность повторного присваивания ему в дальнейшем;
+        -	его недоступность извне в качестве одного из свойств компонента PlaneFinderPoller, ведь репозиторий уже доступен для всего приложения.
+
+        Создадим объект WebClient, который указывает на целевую конечную точку, предоставляемую сервисом PlaneFinder через порт 7634, и присвоим его переменной экземпляра.
+
+        Добавим в данный класс аннотацию @Component, для создания при запуске приложения соответствующего компонента, и аннотации @EnableScheduling для включения периодических опросов с помощью следующей аннотированной функции.
+
+        А также создадим функцию для удаления всех существующих данных Aircraft, опроса конечной точки PlaneFinder посредством клиентского свойства WebClient, преобразования и сохранения извлеченных данных о местоположении воздушных судов в MongoDB и их отображения. Аннотация @Scheduled(fixedRate = 1000) приводит к выполнению аннотированной функции каждые 1000 мс (каждую секунду).
+
+        Но есть нюансы функции pollPlanes(), связанных с лямбда-выражениями Kotlin:
+
+        1.  Если лямбда-выражение — последний из параметров функции, то скобки можно опустить. Сюда же попадают и функции, у которых только один параметр — лямбда-выражение.
+
+        2. Если у самого лямбда-выражения только один параметр, можно указать его явным образом, но не обязательно. Kotlin неявно распознает одиночный параметр лямбда-выражения и позволяет ссылаться на него по имени it, что тоже упрощает применение лямбда-выражений, как демонстрирует следующий параметр-лямбда forEach():
+        ``
+        forEach { repository.save(it) }
+        ``
+
+        3. Функция isNullOrEmpty() интерфейса CharSequence служит средством для обработки String. Сначала она выполняет проверку на null, а после, если значение оказалось не null, проверяет, не пустое ли оно. Обрабатывать это свойство вы можете лишь тогда, когда в нем содержится настоящее значение, и эта функция выполняет обе проверки в один прием. При наличии значения в свойстве reg объекта Aircraft отчет о местоположении этого воздушного судна передается далее, отчеты же о местоположении воздушных судов, у которых отсутствуют регистрационные данные, отфильтровываются.
+
+        Оставшиеся отчеты о местоположении воздушных судов передаются в репозитории для сохранения, после чего оттуда запрашиваются все сохраненные документы и отображаются результаты.
+
+        ### Результаты
+
+        Запустим сервис sbur-mongo, не отключая при этом сервис PlaneFinder, для получения, сохранения и извлечения информации из встраиваемого экземпляра MongoDB, а также отображения на экране результатов каждого из опросов сервиса PlaneFinder:
+
+        ```
+        Aircraft(id=95, callsign=N88846, squawk=4710, reg=N88846, flightno=, route=,
+        type=P46T, category=A1, altitude=18000, heading=234, speed=238, vertRate=-64,
+        selectedAltitude=0, lat=39.157288, lon=-90.844992, barometer=0.0,
+        polarDistance=33.5716, polarBearing=290.454061, isADSB=true, isOnGround=false,
+        lastSeenTime=2020-11-27T20:16:57Z, posUpdateTime=2020-11-27T20:16:57Z,
+        bds40SeenTime=1970-01-01T00:00:00Z)
+
+        Aircraft(id=96, callsign=MVJ710, squawk=1750, reg=N710MV, flightno=,
+        route=IAD-TEX, type=GLF4, category=A2, altitude=18050, heading=66, speed=362,
+        vertRate=2432, selectedAltitude=23008, lat=38.627655, lon=-90.008897,
+        barometer=0.0, polarDistance=20.976944, polarBearing=158.35465, isADSB=true,
+        isOnGround=false, lastSeenTime=2020-11-27T20:16:57Z,
+        posUpdateTime=2020-11-27T20:16:57Z, bds40SeenTime=2020-11-27T20:16:56Z)
+
+        Aircraft(id=97, callsign=SWA1121, squawk=6225, reg=N8654B, flightno=WN1121,
+        route=MDW-DAL-PHX, type=B738, category=A3, altitude=40000, heading=236,
+        speed=398, vertRate=0, selectedAltitude=40000, lat=39.58548, lon=-90.049259,
+        barometer=1013.6, polarDistance=38.411587, polarBearing=8.70042, isADSB=true,
+        isOnGround=false, lastSeenTime=2020-11-27T20:16:57Z,
+        posUpdateTime=2020-11-27T20:16:55Z, bds40SeenTime=2020-11-27T20:16:54Z)
+        ```
+
+        Сервис без проблем запрашивает, захватывает и отображает местоположение воздушных судов.
+    </markdown>
+</slide>

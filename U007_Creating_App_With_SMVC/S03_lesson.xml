@@ -1,0 +1,329 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<slide xmlns="https://ulearn.me/schema/v2" title="Разработка приложения Aircraft Positions " id="30ecb005-5f8a-46ff-98ad-05abb9d35d8c">
+    <markdown>
+        Воспользуемся база данных в оперативной памяти, так как приложение будет учитывать только текущее состояние местоположения воздушных судов в момент запроса, а не исторические данные.
+
+        #### Описание класса предметной области
+
+        Создадим класс предметной области Aircraft в качестве основного средоточия данных. Структура предметной области Aircraft для приложения Aircraft Positions:
+
+        ```
+        @Entity
+        @Data
+        @NoArgsConstructor
+        @AllArgsConstructor
+        public class Aircraft {
+             @Id
+             private Long id;
+             private String callsign, squawk, reg, flightno, route, type, category;
+             private int altitude, heading, speed;
+             @JsonProperty("vert_rate")
+             private int vertRate;
+             @JsonProperty("selected_altitude")
+             private int selectedAltitude;
+             private double lat, lon, barometer;
+             @JsonProperty("polar_distance")
+             private double polarDistance;
+             @JsonProperty("polar_bearing")
+             private double polarBearing;
+             @JsonProperty("is_adsb")
+             private boolean isADSB;
+             @JsonProperty("is_on_ground")
+             private boolean isOnGround;
+             @JsonProperty("last_seen_time")
+             private Instant lastSeenTime;
+             @JsonProperty("pos_update_time")
+             private Instant posUpdateTime;
+             @JsonProperty("bds40_seen_time")
+             private Instant bds40SeenTime;
+        }
+        ```
+        Этот класс предметной области описан с помощью JPA и H2 в качестве нижележащей JPA-совместимой базы данных, а также воспользовались Lombok для создания класса данных с конструкторами — без аргументов и со всеми аргументами, по одному для каждой переменной-члена.
+
+        #### Создание интерфейса репозитория
+
+        Опишем интерфейс репозитория, расширяя CrudRepository из Spring Data и указывая тип хранимого объекта и его ключи — Aircraft и Long в данном случае:
+
+        ```
+        public interface AircraftRepository extends CrudRepository {}
+        ```
+
+        #### Объекты Model и Controller
+
+        Описав данные модели в классе предметной области Aircraft, включим их в Model и предоставим пользователям доступ к ним посредством Controller.
+
+        @RestController — удобная форма записи, сочетающая в себе @Controller и @ResponseBody в одной аннотации, которая возвращает форматированный ответ в анотации объектов JavaScript или каком-либо другом формате. В результате тело ответа на веб-запрос возвращается методом в виде значения Object/Iterable, а не как часть Model.
+
+        @Controller поможет создать приложение, включающее интерфейс пользователя. В классе @Controller каждый метод, снабженный аннотацией @RequestMapping или одной из ее специализированных версий, будет возвращать значение типа String, соответствующее названию файла шаблона без расширения.
+
+        Шаблоны технологий представления по умолчанию размещаются в каталоге src/main/resources/templates проекта. Именно там шаблонизатор будет их искать, если не переопределить поведение с помощью свойств приложения или программным способом.
+
+        Создадим следующий класс PositionController:
+
+        ```
+        @RequiredArgsConstructor
+        @Controller
+        public class PositionController {
+             @NonNull
+             private final AircraftRepository repository;
+             private WebClient client = WebClient.create("http://localhost:7634/aircraft");
+
+             @GetMapping("/aircraft")
+             public String getCurrentAircraftPositions(Model model) {
+                repository.deleteAll();
+
+                client.get()
+                     .retrieve()
+                     .bodyToFlux(Aircraft.class)
+                     .filter(plane -> !plane.getReg().isEmpty())
+                     .toStream()
+                     .forEach(repository::save);
+
+                model.addAttribute("currentPositions", repository.findAll());
+                return "positions";
+            }
+        }
+        ```
+        Контроллер имеет несколько отличий, хотя похож на предыдущие варианты. Первое: вместо @RestController используется аннотация @Controller. Второе: у метода getCurrentAircraftPositions() появился автоматически связываемый параметр Model model — компонент модели, используемый шаблонизатором для предоставления доступа к компонентам приложения, их данным и операциям после добавления этих компонентов в Model в качестве атрибутов. Третье: метод возвращает String вместо типа класса и включает настоящий оператор возврата с названием шаблона без расширения .html.
+
+        #### Создание требуемых файлов представления
+
+        В качестве основы создадим один файл с обычным кодом HTML и один файл шаблона.
+        Поскольку мы собираемся показывать всем посетителям страницу с простым HTML и так как для нее не требуется поддержки шаблонов, поместим файл index.html в каталог src/main/resources/static проекта:
+
+        ```
+        &lt;!DOCTYPE html>
+            &lt;html lang=”en”>
+            &lt;head>
+                &lt;meta charset=”UTF-8”>
+                &lt;title> Retrieve Aircraft Position Report &lt;/title>
+            &lt;/head>
+            &lt;body>
+                &lt;p>&lt;a href=”/aircraft”> Click here &lt;/a>
+                to retrieve current aircraft positions in range of receiver.&lt;/p>
+                &lt;/body>
+            &lt;/html>
+        ```
+
+        Для динамического контента я создадим файл шаблона, добавив в HTML-файл пространство имен XML для тегов Thymeleaf, которые в дальнейшем играют роль инструкций по внедрению контента для шаблонизатора Thymeleaf, как показано в следующем файле positions.html. Чтобы отметить этот файл как файл шаблона для дальнейшей обработки шаблонизатором, я поместим его в каталог src/main/resources/ templates проекта:
+
+        ```
+        &lt;!DOCTYPE HTML>
+        &lt;html lange"en” xnlns:the"http: //wew.thymeleaf.org">
+        &lt;head>
+        &lt;title>Position Report&lt;/title>
+        &lt;meta http-equiv="Content-Type” content="text/html; charset=UTF-8”/>
+        &lt;/head>
+        &lt;body>
+        &lt;div class="positionlist” th:unless="$(#lists. isEmpty (currentPositions)}">
+        &lt;h2>Current Aircraft Positions&lt;/h2>
+        &lt;table>
+            &lt;thead>
+                &lt;tr>
+                    &lt;th>Call Signc/th>
+                    &lt;th>Squawk&lt;/th>
+                    &lt;th>AC Reg&lt;/th>
+                    &lt;th>Flight #&lt;/th>
+                    &lt;th>Route&lt;/th>
+                    &lt;th>AC Type&lt;/th>
+                    &lt;th>Altitude&lt;/th>
+                    &lt;th>Heading&lt;/th>
+                    &lt;th>Speed&lt;/th>
+                    &lt;th>Vert Rate&lt;/th>
+                    &lt;th>Latitude&lt;/th>
+                    &lt;th>Longitude&lt;/th>
+                    &lt;th>Last Seen&lt;/th>
+                    &lt;th>&lt;/th>
+                &lt;/tr>
+            &lt;/thead>
+            &lt;tbody>
+
+                &lt;tr th:each="ac : ${currentPositions}">
+                    &lt;td th:text="${ac.callsign}">&lt;/td>
+                    &lt;td th:text="${ac.squawk}">&lt;/td>
+                    &lt;td th:text="${ac.reg}">&lt;/td>
+                    &lt;td th:text="${ac.flightno)">&lt;/td>
+                    &lt;td th:text="$(ac.route}">&lt;/td>
+                    &lt;td th:text="$(ac.type)">&lt;/td>
+                    &lt;td th:text="${ac.altitude}">&lt;/td>
+                    &lt;td th:text="${ac.heading}">&lt;/td>
+                    &lt;td th:text="${ac.speed)">&lt;/td>
+                    &lt;td thitext="${ac.vertRate}">&lt;/td>
+                    &lt;td thitext="${ac.lat}">&lt;/td>
+                    &lt;td thitext="${ac.lon}">&lt;/td>
+                    &lt;td th:text="${ac. lastSeenTime)">&lt;/td>
+                &lt;/tr>
+            &lt;/tbody>
+        &lt;/table>
+        &lt;/div>
+        &lt;/body>
+        &lt;/html>
+
+        ```
+
+        Для страницы Aircraft Position Report сократим отображаемую информацию до нескольких избранных элементов и отметим несколько мест в шаблоне Thymeleaf positions.html.
+
+        Мы добавили в пространство имен XML теги Thymeleaf с префиксом th с помощью следующей строки кода:
+
+        ```
+        &lt;html lang=”en” xmlns:th=http://www.thymeleaf.org>
+
+        ```
+        При определении раздела (division) указали, что показывать раздел positionList нужно только при наличии данных, а если элемент currentPositions внутри Model пуст, весь раздел просто опускается:
+
+        ```
+        &lt;dic class=”positionlist” th:unless=${#lists.isEmpty(currentPositions)}”>
+
+        ```
+        Определяем таблицу с помощью стандартных тегов таблиц HTML — для самой таблицы, строки заголовка и ее содержимого. Чтобы вывести тело таблицы, я воспользуемся оператором each Thymeleaf для прохода в цикле по всем элементам currentPositions и тегом text Thymeleaf для заполнения столбцов в каждой из строк. При этом ссылаемся на свойства объектов местоположения посредством синтаксиса динамических выражений "${ object. property}".
+
+        #### Результаты
+
+        Запустим приложение Aircraft Positions из IDE. И откроем вкладку в браузере, введем localhost:8080 в адресной строке и нажмем Enter (рис 7.1).
+
+        ![](https://i.imgur.com/IJ1LUQz.png "Рис. 1")
+
+        На этой странице выберем ссылку Click here, чтобы перейти на страницу Aircraft Position Report (рис. 7.2). При обновлении страницы выполняется повторный запрос к сервису PlaneFinder и в отчет включаются текущие данные.
+
+        ![](https://i.imgur.com/XQCAPGg.png "Рис. 2")
+
+        #### Трюк с обновлением
+
+        Добавим функцию регулярного обновления шаблона Aircraft Position Report, для этого добавимв раздел body страницы функцию JavaScript следующего вида, указав частоту обновления в миллисекундах:
+
+        ```
+        &lt;sctipt type=”text/javascript”>
+            window.onload = setupRefresh;
+
+            function setupRefresh() {
+            setTimeout(“refreshPage():”, 5000); // частота обновления в миллисекундах
+            }
+            function setupPage() {
+            window.location = location.href;
+            }
+        &lt;/script>
+
+        ```
+        Шаблонизатор Thymeleaf передаст этот код в сгенерированную страницу в неизменном виде, а браузер пользователя будет выполнять сценарий с указанной частотой.
+
+        #### Передача сообщений
+
+        Однако более серьезные сценарии использования могут потребовать более сложные решения. Потенциальная проблема прошлого кода — значительный объем передаваемой информации, обусловленный периодическим выполнением запросов актуальных данных. Объем сетевого трафика при непрерывных запросах и получении обновлений несколькими клиентами может оказаться существенным.
+
+        Чтобы реализовать более сложные сценарии использования, где учитываются сетевые требования, можно перейти от модели вытягивания (pull model) к модели выталкивания (push model) или их сочетанию.
+
+        Платформы обмена сообщениями предназначены для эффективного получения сообщений, их маршрутизации и доставки от одного приложения другому. Например, RabbitMQ, Apache Kafka и еще множество продуктов. Spring Boot и экосистема Spring предлагают несколько различных вариантов для работы с конвейерами сообщений, один из них это Spring Cloud Stream.
+
+        Spring Cloud Stream предоставляет доступ к уникальным атрибутам поддерживаемых платформ через свойства приложения, компоненты и непосредственную конфигурацию. Binder (адаптер привязки) формирует связь между драйверами потоковой платформы и Spring Cloud Stream (SCSt), что позволяет сосредоточиваться на основных задачах — отправке, маршрутизации и получении сообщений.
+
+        #### Подключаем PlaneFinder
+
+        Переделаем сервис PlaneFinder для публикации сообщений с помощью Spring Cloud Stream.
+
+        Необходимые зависимости
+
+        Добавим в файл сборки Maven pom.xml сервиса PlaneFinder следующие зависимости:
+
+        ```
+        &lt;dependency>
+            &lt;groupId>org. springframework.boot&lt;/groupId>
+            &lt;artifactId>spring-boot-starter-amqp&lt;/artifactId>
+        &lt;/dependency>
+        &lt;dependency>
+            &lt;groupId>org. springframework.cloud&lt;/groupId>
+            &lt;artifactId>spring-cloud-stream&lt;/artifactId>
+        &lt;/dependency>
+        &lt;dependency>
+            &lt;groupId>org. springframework.cloud&lt;/groupId>
+            &lt;artifactId>spring-cloud-stream-binder-kafka&lt;/artifactId>
+        &lt;/dependency>
+        &lt;dependency>
+            &lt;groupId>org. springframework .cloud&lt;/groupId>
+            &lt;artifactId>spring-cloud-stream-binder-rabbit&lt;/artifactId>
+        &lt;/dependency>
+        &lt;dependency>
+            &lt;groupId>org. springframework.kafka&lt;/groupId>
+            &lt;artifactId>spring-kafka&lt;/artifactId>
+        &lt;/dependency>
+
+        ```
+        Одной Зависимости кода spring-cloud-stream для Spring Cloud Stream недостаточно. SCSt необходимы адаптеры привязки, чтобы его абстракции могли работать с различными потоковыми платформами.
+
+        Чтобы Spring Cloud Stream мог работать с платформой обмена сообщениями, необходим драйвер платформы обмена сообщениями и работающий с ней адаптер привязки. В прошлом примере было сочетание «адаптер привязки + драйвер для RabbitMQ и Apache Kafka».
+
+
+        Если включено только одно сочетание «адаптер привязки + драйвер, например RabbitMQ», автоконфигурация Spring Boot сможет однозначно определить, что приложение должно поддерживать обмен сообщениями с экземпляром(-ами) RabbitMQ и соответствующей точкой обмена (exchange) и очередью (queue), а также создать соответствующие вспомогательные компоненты. От разработчика не потребуется каких-либо дополнительных усилий. Если же включить несколько наборов «адаптер привязки + драйвер», то придется указать, какой использовать, но зато можно будет динамически переключаться между всеми включенными платформами во время выполнения, не меняя протестированное и развернутое приложение. Это чрезвычайно удобная и перспективная возможность.
+
+        Внесем в файл pom.xml еще два дополнения: указать версию Spring Cloud уровня проекта, добавив в раздел строку
+
+        ```
+        &lt;spring-cloud.version>2020.0.0-M5&lt;/spring-cloud.version>
+
+        ```
+        Дадим указания относительно спецификации зависимостей (Bill of Materials, BOM) Spring Cloud, из которой система сборки может определить версии любых используемых в проекте компонентов Spring Cloud — в данном случае Spring Cloud Stream:
+
+        ```
+        &lt;dependencyManagement>
+        &lt;dependencies>
+            «&lt;dependency>
+            &lt;groupId>org. springframework .cloud&lt;/groupId>
+            &lt;artifactId>spring-cloud-dependencies&lt;/artifactId>
+            &lt;version>${spring-cloud.version}&lt;/version>
+            &lt;type>pom&lt;/type>
+            &lt;scope>import&lt;/scope>
+        &lt;/dependency>
+        &lt;/dependencies>
+        &lt;/dependencyManagement>
+
+        ```
+        Версии компонентов проектов Spring часто обновляются. Простейший способ определить правильные синхронизированные версии, проверенные для работы с текущей версией Spring Boot, — воспользоваться Spring Initializr. Если выбрать нужные зависимости и нажать кнопку Explore CTRL+SPACE, будут отображены соответствующие элементы и версии.
+
+        Поставка данных о местоположении воздушных судов
+
+        Структура сервиса PlaneFinder и подход Spring Cloud Stream дают возможность опубликовать данные о текущем местоположении воздушных судов в RabbitMQ, которыми смогут пользоваться другие приложения, с помощью всего одного класса:
+
+        ```
+        @AllArgsConstructor
+        @Configuration
+        public class PositionReporter {
+            private final PlaneFinderService pfService;
+
+            @Bean
+            Supplier&lt;Iterable> reportPositions() {
+                return () -> {
+                    try {
+                        return pfService.getAircraft();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                    return List.of();
+                };
+            }
+        }
+
+        ```
+        Так как в результате каждого из опросов радиолокатора с помощью сервиса PlaneFinder формируется список местоположений воздушных судов, сервис PlaneFinder создает сообщение, состоящее из нескольких воздушных судов, в Iterable с помощью вызова метода getAircraft() сервиса PlaneFinder. Автоконфигурация Spring Boot основывается на мнении, что по умолчанию Supplier вызывается каждую секунду, и некоторых обязательных/необязательных свойствах приложения, запуская тем самым весь механизм в действие.
+
+        Свойства приложения
+
+        Обязательным является только одно свойство приложения. Содержимое обновленного файла application.properties сервиса PlaneFinder выглядит так:
+
+        ```
+        server.port=7634
+        spring.cloud.stream.bindings.reportPositions-out-0.destination=aircraftpositions spring.cloud.stream.bindings.reportPositions-out-0.binder=rabbit
+
+        ```
+        С первой версии осталось свойство server.port, указывающее, что наше приложение должно выполнять прослушивание на порте 7634.
+
+        Для полноценной работы функционального API Spring Cloud Stream требуется лишь минимальная настройка свойств. У Supplier есть лишь выходные каналы, так как он производит только сообщения. А у Consumer есть только входные каналы, поскольку он только потребляет сообщения. А у Function — и входные, и выходные, так как он используется для преобразования одних сообщений в другие.
+
+        Названия каналов всех адаптеров привязки состоят из названия метода компонента интерфейса, суффикса in или out и номера канала от 0 до 7. После конкатенации названия канала в виде --n можно определить для него свойства адаптера привязки.
+
+        Для удобства нам потребуется одно свойство — destination. При указании названия destination RabbitMQ создает exchange с названием aircraftpositions.
+
+        А так как мы включили в число зависимостей проекта адаптеры привязки и драйверы как для RabbitMQ, так и для Kafka, необходимо указать, какой адаптер привязки использовать. Для этого возьмем rabbit.
+
+        Теперь сервис PlaneFinder готов к ежесекундной публикации в RabbitMQ текущего местоположения воздушных судов, которое будут использовать другие приложения.
+    </markdown>
+</slide>
