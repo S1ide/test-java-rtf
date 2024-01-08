@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<slide.exercise xmlns="https://ulearn.me/schema/v2" title="Сущность" id="8e383078-6a88-48ba-a6d8-362dd88b52af">
+    <scoring group="homework" passedTestsScore="1" codeReviewScore="4"/>
+    <markdown>
+
+    </markdown>
+    <exercise.universal type="check-exit-code" exerciseDirName="springboot_module6" noStudentZip="true">
+        <checkForPlagiarism>true</checkForPlagiarism>
+        <hideSolutions>true</hideSolutions>
+        <includePathForChecker>./springboot_module6/.mvn/</includePathForChecker>
+        <hideExpectedOutput>false</hideExpectedOutput>
+        <userCodeFile>./src/main/java/me/ulearn/springboot_module6/service/ProductService.java</userCodeFile>
+        <dockerImageName>java-pg-sandbox</dockerImageName>
+        <timeLimit>30</timeLimit>
+        <interpretNonJsonOutputAs>CE</interpretNonJsonOutputAs>
+        <run>mvn clean --s ./settings.xml package -DskipTests=true; java -jar ./target/springboot_module6-0.0.1-SNAPSHOT.jar || exit 0</run>
+        <region>Task</region>
+    </exercise.universal>
+</slide.exercise>
