@@ -9,7 +9,7 @@
         <hideSolutions>true</hideSolutions>
         <includePathForChecker>./springboot2/.mvn/</includePathForChecker>
         <hideExpectedOutput>false</hideExpectedOutput>
-        <userCodeFile>./src/main/java/me/ulearn/springboot2/config/Film.java</userCodeFile>
+        <userCodeFile>./src/main/java/me/ulearn/springboot/config/Film.java</userCodeFile>
         <dockerImageName>java-pg-sandbox</dockerImageName>
         <timeLimit>30</timeLimit>
         <interpretNonJsonOutputAs>CE</interpretNonJsonOutputAs>
