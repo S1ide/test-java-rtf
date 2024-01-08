@@ -7,7 +7,6 @@
     <exercise.universal type="check-exit-code" exerciseDirName="springboot" noStudentZip="true">
         <checkForPlagiarism>true</checkForPlagiarism>
         <hideSolutions>true</hideSolutions>
-        <includePathForChecker>./springboot/.mvn/</includePathForChecker>
         <hideExpectedOutput>false</hideExpectedOutput>
         <userCodeFile>./src/main/java/me/ulearn/springboot/controller/GameController.java</userCodeFile>
         <dockerImageName>java-pg-sandbox</dockerImageName>

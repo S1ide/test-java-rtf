@@ -1,5 +1,6 @@
 package me.ulearn.springboot_module6.test;
 
+import me.ulearn.springboot_module6.test.source.*;
 import org.junit.platform.engine.DiscoverySelector;
 import org.junit.platform.engine.discovery.DiscoverySelectors;
 import org.junit.platform.launcher.Launcher;
@@ -19,10 +20,10 @@ public class TestRunner {
     public static TestResult run() {
         final Launcher launcher = buildLauncher();
         final SummaryGeneratingListener listener = new SummaryGeneratingListener();
-        final List<? extends DiscoverySelector> selectors = ClassFinder
-                .findAllClassesUsingClassLoader(TestRunner.class.getPackageName() + ".source").stream()
-                .map(DiscoverySelectors::selectClass)
-                .toList();
+        final List<? extends DiscoverySelector> selectors = List.of(
+                DiscoverySelectors.selectClass(CustomerControllerTest.class), DiscoverySelectors.selectClass(CustomerTest.class),
+                DiscoverySelectors.selectClass(ProductControllerTest.class), DiscoverySelectors.selectClass(ProductTest.class)
+        );
 
         launcher.registerTestExecutionListeners(listener);
         launcher.execute(buildRequest(selectors));

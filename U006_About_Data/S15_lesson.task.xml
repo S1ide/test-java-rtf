@@ -7,7 +7,6 @@
     <exercise.universal type="check-exit-code" exerciseDirName="springboot_module6" noStudentZip="true">
         <checkForPlagiarism>true</checkForPlagiarism>
         <hideSolutions>true</hideSolutions>
-        <includePathForChecker>./springboot_module6/.mvn/</includePathForChecker>
         <hideExpectedOutput>false</hideExpectedOutput>
         <userCodeFile>./src/main/java/me/ulearn/springboot_module6/entity/Product.java</userCodeFile>
         <dockerImageName>java-pg-sandbox</dockerImageName>

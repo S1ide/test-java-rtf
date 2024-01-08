@@ -1,5 +1,6 @@
 package me.ulearn.springboot.test;
 
+import me.ulearn.springboot.test.source.Film;
 import org.junit.platform.engine.DiscoverySelector;
 import org.junit.platform.engine.discovery.DiscoverySelectors;
 import org.junit.platform.launcher.Launcher;
@@ -19,10 +20,9 @@ public class TestRunner {
     public static TestResult run() {
         final Launcher launcher = buildLauncher();
         final SummaryGeneratingListener listener = new SummaryGeneratingListener();
-        final List<? extends DiscoverySelector> selectors = ClassFinder
-                .findAllClassesUsingClassLoader(TestRunner.class.getPackageName() + ".source").stream()
-                .map(DiscoverySelectors::selectClass)
-                .toList();
+        final List<? extends DiscoverySelector> selectors = List.of(
+                DiscoverySelectors.selectClass(FilmTest.class)
+        );
 
         launcher.registerTestExecutionListeners(listener);
         launcher.execute(buildRequest(selectors));
