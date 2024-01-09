@@ -6,9 +6,9 @@
 
         У сущности должны быть:
 
-        - id Long
-        - name String
-        - developer String
+        - `id` Long
+        - `name` String
+        - `developer` String
     </markdown>
     <exercise.universal type="check-exit-code" exerciseDirName="Exercise" noStudentZip="true">
         <checkForPlagiarism>true</checkForPlagiarism>

@@ -6,11 +6,26 @@
 
         Контроллер должен обрабатывать следующие запросы:
 
-        - GET /games - Вернуть все игры
-        - GET /games/id - Вернуть игру по id
-        - POST /games - Записать игру в БД
-        - PUT /games/id - Изменить игру по id
-        - DELETE /games/id - Удалить игру из БД по id
+        - GET `/games` - Вернуть все игры
+        - GET `/games/id` - Вернуть игру по id
+        - POST `/games` - Записать игру в БД
+        - PUT `/games/id` - Изменить игру по id
+        - DELETE `/games/id` - Удалить игру из БД по id
+
+        В контроллере должен быть "Репозиторий" (List&lt;Game&gt;). Необходимо его по-умолчанию проинициализировать сущностями:
+
+        |Id  | Name                     | Developer             |
+        |:--:|:------------------------:|:---------------------:|
+        | 1  | Alan Wake 2              | Remedy Entertainment  |
+        | 2  | The Witcher 3: Wild Hunt | CD PROJEKT RED        |
+        | 3  | Red Dead Redemption 2    | Rockstar Studios      |
+        | 4  | Vampyr                   | DONTNOD Entertainment |
+        | 5  | The last of us           | Naughty Dog           |
+        | 6  | Cyberpunk 2077           | CD PROJEKT RED        |
+        | 7  | Metro Exodus             | 4A Games              |
+        | 8  | Horizon Zero Dawn        | Guerrilla Games       |
+        | 9  | Castle Crashers          | The Behemoth          |
+        | 10 | Minecraft                | Mojang Studios        |
     </markdown>
     <exercise.universal type="check-exit-code" exerciseDirName="Exercise" noStudentZip="true">
         <checkForPlagiarism>true</checkForPlagiarism>

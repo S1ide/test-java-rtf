@@ -11,6 +11,6 @@ import java.util.Optional;
 
 //#region Task
 public class GameController {
-
+    // TODO: field List<Game> repository, default games initialization, methods
 }
 //#endregion Task
