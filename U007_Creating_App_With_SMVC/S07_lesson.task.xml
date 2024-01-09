@@ -1,8 +1,21 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <slide.exercise xmlns="https://ulearn.me/schema/v2" title="Бэковый фронтенд" id="7eabf828-ce8e-4893-88ec-6f9c56fb3cdc">
-    <scoring group="homework" passedTestsScore="1" codeReviewScore="4"/>
+    <scoring group="homework" passedTestsScore="0" codeReviewScore="5"/>
     <defaultIncludeCodeFile>../_Code.java</defaultIncludeCodeFile>
+    <markdown>
+        Это задание - продолжение предыдущей темы. В этом задании вам потребуется реализовать контроллеры представленя
+        (view) продукта и покупателя. А также реализовать при помощи thymeleaf 5 html представлений:
 
+        - `index.html` - главная страница сайта, с которой можно будет перейти на другие 4 html при помощи кнопок
+        - `customer.html` - информация о конкретном покупателе
+        - `customers.html` - информация о всех покупателях
+        - `product.html` - информация о конкретном продукте
+        - `products.html` - информация о всех продуктах
+
+        По окончании прикрепите ссылку на свой репозиторий, чтобы его смог проверить преподаватель.
+
+        Красота приветствуется, но в основе - умение передавать данные из БД в представление.
+    </markdown>
     <exercise.file>
         <initialCode>Вставьте сюда ссылку на репозиторий</initialCode>
         <hideExpectedOutput>true</hideExpectedOutput>

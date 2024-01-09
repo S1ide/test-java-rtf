@@ -2,7 +2,20 @@
 <slide.exercise xmlns="https://ulearn.me/schema/v2" title="Контроллер" id="1789d765-a3df-4579-a967-8aa71e03d1fd">
     <scoring group="homework" passedTestsScore="1" codeReviewScore="4"/>
     <markdown>
+        Необходимо переписать контроллер под работу с репозиторием.
 
+        `List` необходимо заменить на 'GameRepository'.
+
+        Методы репозитория, которые помогут вам в решении практики:
+
+        - `findAll()` - позволяет получить все объекты из таблицы базы данных
+        - `findById(ID id)` - принимает в себя номер первичного ключа из базы данных и возвращает `Optional` объекта,
+        который хранится по этому ключу.
+        - `existsById(ID id)` - принимает в себя номер первичного ключа из базы данных и возвращает `boolean`. `True` -
+        переданный первичный ключ содержится в базе данных, `False` - переданного первичного ключа нет в базе данных
+        - `save(T entity)` - принимает в себя объект, который мы хотим сохранить в нашей базе данных
+        - `deleteById(ID id)' - принимает в себя номер первичного ключа из базы данных и удаляет объект,
+        который хранится по этому ключу
     </markdown>
     <exercise.universal type="check-exit-code" exerciseDirName="springboot" noStudentZip="true">
         <checkForPlagiarism>true</checkForPlagiarism>
@@ -12,7 +25,7 @@
         <dockerImageName>java-pg-sandbox</dockerImageName>
         <timeLimit>30</timeLimit>
         <interpretNonJsonOutputAs>CE</interpretNonJsonOutputAs>
-        <run>mvn clean --s ./settings.xml package -DskipTests=true; java -jar ./target/springboot-0.0.1-SNAPSHOT.jar || exit 0</run>
+        <run>mvn clean --s .mvn/settings.xml package -DskipTests=true; java -jar ./target/springboot-0.0.1-SNAPSHOT.jar || exit 0</run>
         <region>Task</region>
     </exercise.universal>
 </slide.exercise>

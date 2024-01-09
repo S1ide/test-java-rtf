@@ -2,7 +2,12 @@
 <slide.exercise xmlns="https://ulearn.me/schema/v2" title="Репозиторий" id="ee21be45-afbe-43b2-9efc-366f277fb8c1">
     <scoring group="homework" passedTestsScore="1" codeReviewScore="4"/>
     <markdown>
+        Необходимо написать репозиторий для сущности Game.
 
+        Что необходимо сделать:
+
+        - Повесить анотации, необходимые для реализации репозитория
+        - Найти необходимый интерфейс и унаследовать GameRepository от него
     </markdown>
     <exercise.universal type="check-exit-code" exerciseDirName="springboot" noStudentZip="true">
         <checkForPlagiarism>true</checkForPlagiarism>
@@ -12,7 +17,7 @@
         <dockerImageName>java-pg-sandbox</dockerImageName>
         <timeLimit>30</timeLimit>
         <interpretNonJsonOutputAs>CE</interpretNonJsonOutputAs>
-        <run>mvn clean --s ./settings.xml package -DskipTests=true; java -jar ./target/springboot-0.0.1-SNAPSHOT.jar || exit 0</run>
+        <run>mvn clean --s .mvn/settings.xml package -DskipTests=true; java -jar ./target/springboot-0.0.1-SNAPSHOT.jar || exit 0</run>
         <region>Task</region>
     </exercise.universal>
 </slide.exercise>

@@ -2,7 +2,18 @@
 <slide.exercise xmlns="https://ulearn.me/schema/v2" title="Практика «ConfigurationProperties». Начало" id="04d8d6c7-0dc8-4024-9540-f21d33fd3851">
     <scoring group="homework" passedTestsScore="1" codeReviewScore="4"/>
     <markdown>
+        Дан макет сущности. Необходимо доработать её так, чтобы у неё были геттеры, сеттеры (прочесть об аннотации `@Data`),
+        а также, чтобы Spring автоматически встраивал значения в поля сущности при помощи
+        аннотации `@ConfigurationProperties`. Ещё необходимо переопределить метод `toString()`,
+        это нам понадобится в следующей практике. Формат `toSting()` дожен быть такой: `название (жанр, годВыпуска)`
 
+        Содержимое файла `application.properties`:
+
+        ```
+        film.name=Stranger Things
+        film.genre=horror
+        film.year-of-release=2016
+        ```
     </markdown>
     <exercise.universal type="check-exit-code" exerciseDirName="springboot2" noStudentZip="true">
         <checkForPlagiarism>true</checkForPlagiarism>
@@ -12,7 +23,7 @@
         <dockerImageName>java-pg-sandbox</dockerImageName>
         <timeLimit>30</timeLimit>
         <interpretNonJsonOutputAs>CE</interpretNonJsonOutputAs>
-        <run>mvn clean --s ./settings.xml package -DskipTests=true; java -jar ./target/springboot-0.0.1-SNAPSHOT.jar || exit 0</run>
+        <run>mvn clean --s .mvn/settings.xml package -DskipTests=true; java -jar ./target/springboot-0.0.1-SNAPSHOT.jar || exit 0</run>
         <region>Task</region>
     </exercise.universal>
 </slide.exercise>

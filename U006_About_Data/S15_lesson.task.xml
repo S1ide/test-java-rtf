@@ -2,7 +2,21 @@
 <slide.exercise xmlns="https://ulearn.me/schema/v2" title="Продукт. Сущность" id="a287d7fb-084d-4acf-872b-041dda7d475c">
     <scoring group="homework" passedTestsScore="1" codeReviewScore="4"/>
     <markdown>
+        Необходимо написать сущность Product.
 
+        Для решения данного задания вам необходимо познакомиться с аннотациями `@NoArgsConstructor`, `@AllArgsConstructor`,
+        а также использовать ранее изученные анотации, необходимые для создания геттеров и сеттеров и добавления сущности
+        в базу данных.
+
+        - `@NoArgsConstructor` - создаёт конструктор класса без аргументов.
+        - `@AllArgsConstructor` - созадёт конструктор класса, который принимает в себя аргументы и присваевает их значения
+        всем полям класса (порядок аргументов зависит от очерёдности расположения полей в классе).
+
+        Необходимые поля:
+
+        - `id` Long (является первичным ключём)
+        - `name` String
+        - `isAdult` Boolean
     </markdown>
     <exercise.universal type="check-exit-code" exerciseDirName="springboot_module6" noStudentZip="true">
         <checkForPlagiarism>true</checkForPlagiarism>
@@ -12,7 +26,7 @@
         <dockerImageName>java-pg-sandbox</dockerImageName>
         <timeLimit>30</timeLimit>
         <interpretNonJsonOutputAs>CE</interpretNonJsonOutputAs>
-        <run>mvn clean --s ./settings.xml package -DskipTests=true; java -jar ./target/springboot_module6-0.0.1-SNAPSHOT.jar || exit 0</run>
+        <run>mvn clean --s .mvn/settings.xml package -DskipTests=true; java -jar ./target/springboot_module6-0.0.1-SNAPSHOT.jar || exit 0</run>
         <region>Task</region>
     </exercise.universal>
 </slide.exercise>

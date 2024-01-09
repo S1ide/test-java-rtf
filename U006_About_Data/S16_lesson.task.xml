@@ -2,7 +2,21 @@
 <slide.exercise xmlns="https://ulearn.me/schema/v2" title="Покупатель. Сервис" id="60316b9f-006f-4830-adce-a9eea2295cf2">
     <scoring group="homework" passedTestsScore="1" codeReviewScore="4"/>
     <markdown>
+        Необходимо написать сервис для Customer.
 
+        Сервис должен быть помечен соответствующей аннотацией и иметь внутри себя поля `CustomerRepository` и `ProductRepository`.
+
+        Методы, которые вы должны реализовать:
+
+        - `Customer createCustomer(Customer customer)` - сохраняет переданного клиента в репозиторий.
+        - `ResponseEntity&lt;Customer&gt; updateCustomer(Long id, Customer customer)`- обновляет клиента по id.
+        - `ResponseEntity&lt;Customer&gt; getCustomer(Long id)` - получает клиента по id, если такой существует.
+        - `ResponseEntity&lt;List&lt;Product&gt;&gt; getProducts(Long id)` - получает все продукты, которые присвоены клиенту.
+        - `ResponseEntity&lt;Product&gt; saveProduct(Long id, Product product)` - добавляет продукт к списку клиента.
+        - `ResponseEntity&lt;Product&gt; removeProduct(Long id, Product product)` - удаляет продукт из списка клиента.
+
+        Если клиент или продукт не существуют, то мы должны получать HttpStatus.NOT_FOUND. При попытке добавить к клиенту
+        уже привязанный продукт мы должны получать HttpStatus.NOT_ACCEPTABLE. В противном случаем получаем HttpStatus.OK.
     </markdown>
     <exercise.universal type="check-exit-code" exerciseDirName="springboot_module6" noStudentZip="true">
         <checkForPlagiarism>true</checkForPlagiarism>
@@ -12,7 +26,7 @@
         <dockerImageName>java-pg-sandbox</dockerImageName>
         <timeLimit>30</timeLimit>
         <interpretNonJsonOutputAs>CE</interpretNonJsonOutputAs>
-        <run>mvn clean --s ./settings.xml package -DskipTests=true; java -jar ./target/springboot_module6-0.0.1-SNAPSHOT.jar || exit 0</run>
+        <run>mvn clean --s .mvn/settings.xml package -DskipTests=true; java -jar ./target/springboot_module6-0.0.1-SNAPSHOT.jar || exit 0</run>
         <region>Task</region>
     </exercise.universal>
 </slide.exercise>

@@ -1,8 +1,13 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<slide.exercise xmlns="https://ulearn.me/schema/v2" title="Практика «Value». Продолжение" id="cd8df849-c9fc-476a-b1cd-e710a4720893">
+<slide.exercise xmlns="https://ulearn.me/schema/v2" title="Практика «ConfigurationProperties». Продолжение" id="cd8df849-c9fc-476a-b1cd-e710a4720893">
     <scoring group="homework" passedTestsScore="1" codeReviewScore="4"/>
     <markdown>
+        Необходимо написать контроллер. Контроллер должен обрабатывать следующие запросы:
 
+        - GET `/` - Вернуть информацию о фильме (метод `toString()`)
+        - GET `/name` - Вернуть название фильма
+        - GET `/genre` - Вернуть жанр фильма
+        - GET `/year` - Вернуть год выпуска фильма
     </markdown>
     <exercise.universal type="check-exit-code" exerciseDirName="springboot2" noStudentZip="true">
         <checkForPlagiarism>true</checkForPlagiarism>
@@ -12,7 +17,7 @@
         <dockerImageName>java-pg-sandbox</dockerImageName>
         <timeLimit>30</timeLimit>
         <interpretNonJsonOutputAs>CE</interpretNonJsonOutputAs>
-        <run>mvn clean --s ./settings.xml package -DskipTests=true; java -jar ./target/springboot-0.0.1-SNAPSHOT.jar || exit 0</run>
+        <run>mvn clean --s .mvn/settings.xml package -DskipTests=true; java -jar ./target/springboot-0.0.1-SNAPSHOT.jar || exit 0</run>
         <region>Task</region>
     </exercise.universal>
 </slide.exercise>

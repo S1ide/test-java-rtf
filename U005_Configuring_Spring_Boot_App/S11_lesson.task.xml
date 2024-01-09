@@ -2,7 +2,24 @@
 <slide.exercise xmlns="https://ulearn.me/schema/v2" title="Практика «Value»" id="019cff62-4f06-4267-ae18-d8229589bd54">
     <scoring group="homework" passedTestsScore="1" codeReviewScore="4"/>
     <markdown>
+        Допишите контроллер так, чтобы он обрабатывал следующие методы:
 
+        - GET `/brand` - возвращает марку машины
+        - GET `/power` - возвращает мощность машины
+        - GET `/releaseYear` - возвращает год выпуска машины
+        - GET `/tankCapacity` - возвращает вместимость бака машины
+
+        Также имеется файл `application.properties` в котором есть код:
+
+        ```
+        car.brand=Toyota Camry 3.5
+        car.power=298
+        car.releaseYear=2022
+        car.tankCapacity=60
+        ```
+
+        На основе этого сделайте так, чтобы Spring автоматически встраивал значения в поля контроллера при помощи
+        аннотации `@Value`.
     </markdown>
     <exercise.universal type="check-exit-code" exerciseDirName="springboot" noStudentZip="true">
         <checkForPlagiarism>true</checkForPlagiarism>
@@ -12,7 +29,7 @@
         <dockerImageName>java-pg-sandbox</dockerImageName>
         <timeLimit>30</timeLimit>
         <interpretNonJsonOutputAs>CE</interpretNonJsonOutputAs>
-        <run>mvn clean --s ./settings.xml package -DskipTests=true; java -jar ./target/springboot-0.0.1-SNAPSHOT.jar || exit 0</run>
+        <run>mvn clean --s .mvn/settings.xml package -DskipTests=true; java -jar ./target/springboot-0.0.1-SNAPSHOT.jar || exit 0</run>
         <region>Task</region>
     </exercise.universal>
 </slide.exercise>

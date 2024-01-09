@@ -2,7 +2,17 @@
 <slide.exercise xmlns="https://ulearn.me/schema/v2" title="Продукт. Контроллер" id="cf6634ca-299f-4622-a070-3a598f455f2a">
     <scoring group="homework" passedTestsScore="1" codeReviewScore="4"/>
     <markdown>
+        Необходимо написать контроллер для Customer.
 
+        Работу в контроллере необходимо реализовать с помощь ранее прописанного `ProductService` .
+
+        Методы, которые необходимо реализовать:
+
+        - Post `/api/v1/product` - создание и добавление продукта.
+        - PUT `/api/v1/product/id` - обновление продукта по id.
+        - GET `/api/v1/product/id` - получение продукта по id.
+        - GET `/api/v1/product` - получение всех продуктов.
+        - DELETE `/api/v1/product/id` - удаление продукта по id.
     </markdown>
     <exercise.universal type="check-exit-code" exerciseDirName="springboot_module6" noStudentZip="true">
         <checkForPlagiarism>true</checkForPlagiarism>
@@ -12,7 +22,7 @@
         <dockerImageName>java-pg-sandbox</dockerImageName>
         <timeLimit>30</timeLimit>
         <interpretNonJsonOutputAs>CE</interpretNonJsonOutputAs>
-        <run>mvn clean --s ./settings.xml package -DskipTests=true; java -jar ./target/springboot_module6-0.0.1-SNAPSHOT.jar || exit 0</run>
+        <run>mvn clean --s .mvn/settings.xml package -DskipTests=true; java -jar ./target/springboot_module6-0.0.1-SNAPSHOT.jar || exit 0</run>
         <region>Task</region>
     </exercise.universal>
 </slide.exercise>

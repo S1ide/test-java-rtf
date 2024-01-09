@@ -2,7 +2,14 @@
 <slide.exercise xmlns="https://ulearn.me/schema/v2" title="Сущность" id="37045e1a-3a51-4c5d-948f-a19788d00dc0">
     <scoring group="homework" passedTestsScore="1" codeReviewScore="4"/>
     <markdown>
+        Необходимо дописать сущность игры.
 
+        На класс и поля необходимо навесить анотации, которые понадобятся для создания сущности в базе данных. В данной
+        практике вы должны сделать так, чтобы поле `id` стало идентификатором с автоматической генерацией первичного
+        ключа, и класс `Game` стал сущностью базы данных.
+
+        Для выполнения данного задания вам надо изучить анотации, которые необходимы для работы с базами данных, в частности
+        аннотацию `@Entity`.
     </markdown>
     <exercise.universal type="check-exit-code" exerciseDirName="springboot" noStudentZip="true">
         <checkForPlagiarism>true</checkForPlagiarism>
@@ -12,7 +19,7 @@
         <dockerImageName>java-pg-sandbox</dockerImageName>
         <timeLimit>30</timeLimit>
         <interpretNonJsonOutputAs>CE</interpretNonJsonOutputAs>
-        <run>mvn clean --s ./settings.xml package -DskipTests=true; java -jar ./target/springboot-0.0.1-SNAPSHOT.jar || exit 0</run>
+        <run>mvn clean --s .mvn/settings.xml package -DskipTests=true; java -jar ./target/springboot-0.0.1-SNAPSHOT.jar || exit 0</run>
         <region>Task</region>
     </exercise.universal>
 </slide.exercise>
