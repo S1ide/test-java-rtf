@@ -36,8 +36,8 @@ public class Game {
         return developer;
     }
 
-    public void setDeveloper(String publisher) {
-        this.developer = publisher;
+    public void setDeveloper(String developer) {
+        this.developer = developer;
     }
 }
 //#endregion Task

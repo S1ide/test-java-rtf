@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<slide.exercise xmlns="https://ulearn.me/schema/v2" title="Сущность" id="04d8d6c7-0dc8-4024-9540-f21d33fd3851">
+<slide.exercise xmlns="https://ulearn.me/schema/v2" title="Практика «ConfigurationProperties». Начало" id="04d8d6c7-0dc8-4024-9540-f21d33fd3851">
     <scoring group="homework" passedTestsScore="1" codeReviewScore="4"/>
     <markdown>
 
