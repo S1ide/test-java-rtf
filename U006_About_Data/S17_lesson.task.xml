@@ -8,11 +8,11 @@
 
         Методы, которые вы должны реализовать:
 
-        - Product createProduct(Product product) - сохраняет переданный продукт в репозиторий.
-        - ResponseEntity&lt;Product&gt; updateProduct(Long id, Product product) - обновляет продукт по id.
-        - ResponseEntity&lt;Product&gt; getProduct(Long id) - получает продукт по id.
-        - void removeProduct(Long id) - удаляет продукт по id.
-        - Iterable&lt;Product&gt; getProducts() - возвращает все продукты.
+        - `Product createProduct(Product product)` - сохраняет переданный продукт в репозиторий.
+        - `ResponseEntity&lt;Product&gt; updateProduct(Long id, Product product)` - обновляет продукт по id.
+        - `ResponseEntity&lt;Product&gt; getProduct(Long id)` - получает продукт по id.
+        - `void removeProduct(Long id)` - удаляет продукт по id.
+        - `Iterable&lt;Product&gt; getProducts()` - возвращает все продукты.
 
         Если продукт не существует, то мы должны получать HttpStatus.NOT_FOUND, в противном случае получаем HttpStatus.OK.
     </markdown>
