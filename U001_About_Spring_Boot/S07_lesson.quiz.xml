@@ -1,12 +1,44 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<slide.quiz xmlns="https://ulearn.me/schema/v2" title="Контрольный вопрос" id="23cf7a8e-7304-4c86-bfee-1235fcb329c1">
+<slide.quiz xmlns="https://ulearn.me/schema/v2" title="Контрольный вопрос" id="1ec358f2-6256-4b18-abe7-f5db8e573c2b">
   <scoring manualCheck="false" tries="2"/>
-  <question.choice id="compileRun" multiple="false" shuffle="true" maxScore="1">
+  <question.choice id="dependencies" multiple="false" shuffle="true" maxScore="1">
     <text>Как реализуется фишка управления зависимостями в Spring Boot?</text>
     <allowedMistakes checkedUnnecessary="0" notCheckedNecessary="0" />
     <item id="1" isCorrect="false">Фреймворк анализирует зависимости и устраняет конфиклиты при автоматическом запуске.</item>
     <item id="2" isCorrect="false">Фреймворк анализирует зависимости и устраняет конфиклиты в реальном времени.</item>
     <item id="3" isCorrect="false">Фреймворк анализирует зависимости, синхронизирует их в одном файле и устраняет конфиклиты при автоматическом запуске.</item>
     <item id="4" isCorrect="true">Фреймворк анализирует зависимости, синхронизирует их в одном файле и устраняет конфиклиты в реальном времени.</item>
+  </question.choice>
+  <question.choice id="advantages" multiple="true" shuffle="true" maxScore="1">
+    <text>Выберете основные преимущества Spring Boot:</text>
+    <allowedMistakes checkedUnnecessary="0" notCheckedNecessary="0" />
+    <item id="1" isCorrect="false">Структурированность</item>
+    <item id="2" isCorrect="true">Упрощение управления зависимостями</item>
+    <item id="3" isCorrect="true">Упрощение развертывания</item>
+    <item id="4" isCorrect="false">Упрощенный синтаксис</item>
+    <item id="5" isCorrect="true">Автоконфигурация</item>
+  </question.choice>
+  <question.choice id="modulesForSpringFramework" multiple="true" shuffle="true" maxScore="1">
+    <text>Выберете из предложенных ниже модули, из которых состоит Spring Framework:</text>
+    <allowedMistakes checkedUnnecessary="0" notCheckedNecessary="0" />
+    <item id="1" isCorrect="false">http</item>
+    <item id="2" isCorrect="true">data access</item>
+    <item id="3" isCorrect="true">web</item>
+    <item id="4" isCorrect="false">os</item>
+    <item id="5" isCorrect="true">core</item>
+  </question.choice>
+  <question.choice id="easierDeployment" multiple="true" shuffle="true" maxScore="1">
+    <text>Как Spring Boot упрощает развертывание?</text>
+    <allowedMistakes checkedUnnecessary="0" notCheckedNecessary="0" />
+    <item id="1" isCorrect="false">выделяется каждый файл из JAR-файла приложения и все JAR-файлы зависимостей объединяются в один целевой JAR-файл</item>
+    <item id="2" isCorrect="true">создаются вложенные JAR-файлы с сохранением их желаемого и получающегося форматов</item>
+  </question.choice>
+  <question.choice id="autoconfiguration" multiple="true" shuffle="true" maxScore="1">
+    <text>Что делает Автоконфигурация?</text>
+    <allowedMistakes checkedUnnecessary="0" notCheckedNecessary="0" />
+    <item id="1" isCorrect="false">Автоматически конфигурирует приложение Spring на основе ваших сценариев пользования</item>
+    <item id="2" isCorrect="true">Автоматически конфигурирует приложение Spring на основе добавленных jar-зависимостей</item>
+    <item id="3" isCorrect="false">Конфигурирует приложение Spring на основе ваших сценариев пользования и сохраняет их в
+      папку проекта</item>
   </question.choice>
 </slide.quiz>

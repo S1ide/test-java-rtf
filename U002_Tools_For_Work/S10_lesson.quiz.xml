@@ -1,0 +1,43 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<slide.quiz xmlns="https://ulearn.me/schema/v2" title="Контрольный вопрос" id="ce3d11cd-7fc5-48e3-aa31-b8fad1798abb">
+    <scoring manualCheck="false" tries="2"/>
+    <question.choice id="assemblySystems" multiple="true" shuffle="true" maxScore="1">
+        <text>Какие системы сборки поддерживает Spring Boot?</text>
+        <allowedMistakes checkedUnnecessary="0" notCheckedNecessary="0" />
+        <item id="1" isCorrect="false">Docker</item>
+        <item id="2" isCorrect="false">CMake</item>
+        <item id="3" isCorrect="true">Gradle</item>
+        <item id="4" isCorrect="true">Maven</item>
+        <item id="5" isCorrect="false">Webpack</item>
+    </question.choice>
+    <question.choice id="quickToolsGradle" multiple="true" shuffle="true" maxScore="1">
+        <text>Какие возможности, помогающие сократить время разработки, имеет Gradle?</text>
+        <allowedMistakes checkedUnnecessary="0" notCheckedNecessary="0" />
+        <item id="1" isCorrect="true">обход компиляции для Java</item>
+        <item id="2" isCorrect="true">инкрементная компиляция классов Java</item>
+        <item id="3" isCorrect="true">специальный демон для компиляции проекта</item>
+    </question.choice>
+    <question.choice id="programLanguagesJVM" multiple="true" shuffle="true" maxScore="1">
+        <text>Какие языки чаще всего используются при работе с JVM?</text>
+        <allowedMistakes checkedUnnecessary="0" notCheckedNecessary="0" />
+        <item id="1" isCorrect="false">Clojure</item>
+        <item id="2" isCorrect="true">Java</item>
+        <item id="3" isCorrect="true">Kotlin</item>
+        <item id="4" isCorrect="false">Groovy</item>
+        <item id="5" isCorrect="false">Scala</item>
+    </question.choice>
+    <question.choice id="assemblyApproachMaven" multiple="true" shuffle="true" maxScore="1">
+        <text>Какой подход к сборке проекта использует Maven?</text>
+        <allowedMistakes checkedUnnecessary="0" notCheckedNecessary="0" />
+        <item id="1" isCorrect="false">Императивный</item>
+        <item id="2" isCorrect="true">Декларативный</item>
+    </question.choice>
+    <question.choice id="modulesForSpringFramework" multiple="true" shuffle="true" maxScore="1">
+        <text>В чем различия проекта Spring Boot и стандартного проекта приложения Java?</text>
+        <allowedMistakes checkedUnnecessary="0" notCheckedNecessary="0" />
+        <item id="1" isCorrect="false">Spring Boot включает по умолчанию пустой метод ``public static void main``, а Java помещает в
+            метод ``main`` код для выполнения.</item>
+        <item id="2" isCorrect="true">Java включает по умолчанию пустой метод ``public static void main``, а Spring Boot помещает в
+            метод ``main`` класса Java код для выполнения.</item>
+    </question.choice>
+</slide.quiz>
