@@ -1,8 +1,8 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<slide.exercise xmlns="https://ulearn.me/schema/v2" title="Продукт. Сущность" id="a287d7fb-084d-4acf-872b-041dda7d475c">
+<slide.exercise xmlns="https://ulearn.me/schema/v2" title="Покупатель. Сущность" id="f9160597-145d-4005-8959-c2b4487e02dd">
     <scoring group="homework" passedTestsScore="1" codeReviewScore="4"/>
     <markdown>
-        Необходимо написать сущность Product.
+        Необходимо написать сущность Customer.
 
         Для решения данного задания вам необходимо познакомиться с аннотациями `@NoArgsConstructor`, `@AllArgsConstructor`,
         а также использовать ранее изученные анотации, необходимые для создания геттеров и сеттеров и добавления сущности
@@ -14,15 +14,25 @@
 
         Необходимые поля:
 
-        - `id` Long (является первичным ключём)
+        - `id` Long
         - `name` String
-        - `isAdult` Boolean
+        - `surname` String
+        - `birthDate` LocalDate
+        - `email` String
+        - `password` String (Необходимо повесить аннотацию, чтобы данное поле было необязательно при запросе Json)
+        - `cart` List&lt;Product&gt; (Необходимо повесить аннотацию, чтобы реализовать связь OneToMany между Customer и
+        Product с помощью данного поля)
+
+        Также вам необходимо реализовать методы `getAge()` и `isAdult()`:
+
+        - `Long getAge()` должен вычислять возраст покупаетлся в зависимости от его даты рождения и текущей даты.
+        - `Boolean isAdult()` должен проверять является ли покупатель совершеннолетним или нет.
     </markdown>
     <exercise.universal type="check-exit-code" exerciseDirName="springboot_module6" noStudentZip="true">
         <checkForPlagiarism>true</checkForPlagiarism>
         <hideSolutions>true</hideSolutions>
         <hideExpectedOutput>false</hideExpectedOutput>
-        <userCodeFile>./src/main/java/me/ulearn/springboot_module6/entity/Product.java</userCodeFile>
+        <userCodeFile>./src/main/java/me/ulearn/springboot_module6/entity/Customer.java</userCodeFile>
         <dockerImageName>java-pg-sandbox</dockerImageName>
         <timeLimit>30</timeLimit>
         <interpretNonJsonOutputAs>CE</interpretNonJsonOutputAs>

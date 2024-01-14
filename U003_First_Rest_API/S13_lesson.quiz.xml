@@ -1,0 +1,37 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<slide.quiz xmlns="https://ulearn.me/schema/v2" title="Контрольный вопрос" id="2c46d70e-6e96-411f-a951-87b885313f55">
+    <scoring manualCheck="false" tries="2"/>
+    <question.choice id="usingAPI" multiple="true" shuffle="true" maxScore="1">
+        <text>В каких случаях используют API?</text>
+        <allowedMistakes checkedUnnecessary="0" notCheckedNecessary="0" />
+        <item id="1" isCorrect="true">Стабильная функциональность и/или нововведения носят ограниченный характер и происходят редко.</item>
+        <item id="2" isCorrect="false">Производственные моменты, когда гибкость взаимодействия функций важнее функции.</item>
+        <item id="3" isCorrect="true">Предметная область не изучена.</item>
+        <item id="4" isCorrect="true">Требования по масштабированию всех функциональных возможностей известны и согласованы между собой.</item>
+    </question.choice>
+    <question.choice id="accessMethod" multiple="true" shuffle="true" maxScore="1">
+        <text>Что из приведённого ниже называют методом доступа?</text>
+        <allowedMistakes checkedUnnecessary="0" notCheckedNecessary="0" />
+        <item id="1" isCorrect="false">Setter</item>
+        <item id="2" isCorrect="true">Getter</item>
+        <item id="3" isCorrect="true">Accessor</item>
+        <item id="4" isCorrect="false">Mutator</item>
+    </question.choice>
+    <question.choice id="statelessServices" multiple="true" shuffle="true" maxScore="1">
+        <text>Сервисы без сохранения состояния это – приложения, которые…</text>
+        <allowedMistakes checkedUnnecessary="0" notCheckedNecessary="0" />
+        <item id="1" isCorrect="false">Не поддерживают собственное состояние в ходе последовательности взаимодействий, а ждут, что другие сервисы сделают это вместо них.</item>
+        <item id="2" isCorrect="true">Поддерживают собственное состояние в ходе последовательности взаимодействий и не ждут от других сервисов, что другие сервисы сделают это вместо них.</item>
+        <item id="3" isCorrect="false">Не поддерживают собственное состояние в ходе последовательности взаимодействий и не ждут от других сервисов, что другие сервисы сделают это вместо них.</item>
+        <item id="4" isCorrect="false">Не поддерживают собственное состояние в ходе последовательности взаимодействий, так как эта функция им не нужна.</item>
+    </question.choice>
+    <question.choice id="commandsForRESTAPI" multiple="true" shuffle="true" maxScore="1">
+        <text>На основе каких команд создается REST API?</text>
+        <allowedMistakes checkedUnnecessary="0" notCheckedNecessary="0" />
+        <item id="1" isCorrect="true">GET</item>
+        <item id="2" isCorrect="true">HEAD</item>
+        <item id="3" isCorrect="true">POST</item>
+        <item id="4" isCorrect="false">SET</item>
+        <item id="5" isCorrect="false">TAKE</item>
+    </question.choice>
+</slide.quiz>

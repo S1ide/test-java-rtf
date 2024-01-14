@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<slide.quiz xmlns="https://ulearn.me/schema/v2" title="Контрольный вопрос" id="344f6438-dade-4a05-a41d-af8fe5371856">
+    <scoring manualCheck="false" tries="2"/>
+    <question.choice id="springMVC" multiple="true" shuffle="true" maxScore="1">
+        <text>Что понимается под Spring MVC?</text>
+        <allowedMistakes checkedUnnecessary="0" notCheckedNecessary="0" />
+        <item id="1" isCorrect="true">Реализация каким-либо образом паттерна «модель — представление — контроллер» в приложении Spring.</item>
+        <item id="2" isCorrect="false">Реализация приложения с помощью готовых шаблонов.</item>
+        <item id="3" isCorrect="true">Создание приложения на основе компонентов Spring MVC, например интерфейса Model, классов @Controller и различных технологий представлений.</item>
+        <item id="4" isCorrect="true">Разработка блокирующих/нереактивных приложений с помощью Spring.</item>
+    </question.choice>
+    <question.choice id="templatingTool" multiple="true" shuffle="true" maxScore="1">
+        <text>Что делают шаблонизаторы?</text>
+        <allowedMistakes checkedUnnecessary="0" notCheckedNecessary="0" />
+        <item id="1" isCorrect="false">Создают шаблоны для более простого написания приложений.</item>
+        <item id="2" isCorrect="true">Позволяют работающему на стороне сервера приложению генерировать конечные страницы для отображения и выполнения в браузере конечного пользователя.</item>
+        <item id="3" isCorrect="false">Позволяют манипулировать шаблонами, создавать и изменять их.</item>
+    </question.choice>
+    <question.choice id="viewTechnologies" multiple="true" shuffle="true" maxScore="1">
+        <text>Какие технологии представлений поддерживает Spring Boot?</text>
+        <allowedMistakes checkedUnnecessary="0" notCheckedNecessary="0" />
+        <item id="1" isCorrect="true">Thymeleaf</item>
+        <item id="2" isCorrect="true">Groovy Markup</item>
+        <item id="3" isCorrect="true">FreeMarker</item>
+        <item id="4" isCorrect="true">Mustache</item>
+    </question.choice>
+</slide.quiz>

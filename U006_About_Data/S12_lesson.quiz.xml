@@ -1,0 +1,41 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<slide.quiz xmlns="https://ulearn.me/schema/v2" title="Контрольный вопрос" id="a4b60eb7-5d7f-4824-9982-994d48b087e9">
+    <scoring manualCheck="false" tries="2"/>
+    <question.choice id="springDataTarget" multiple="true" shuffle="true" maxScore="1">
+        <text>Главная цель Spring Data?</text>
+        <allowedMistakes checkedUnnecessary="0" notCheckedNecessary="0" />
+        <item id="1" isCorrect="true">Обеспечение привычной и единообразной модели программирования на основе Spring для доступа к данным с сохранением при этом всех характеристик используемого хранилища данных.</item>
+        <item id="2" isCorrect="false">Обеспечение привычной и единообразной модели программирования на основе Spring для доступа к данным с сохранением при этом части характеристик используемого хранилища данных.</item>
+    </question.choice>
+    <question.choice id="dataBaseForDeployment" multiple="true" shuffle="true" maxScore="1">
+        <text>Какая база данных предпочтительно используется для развертывания высоконагруженных сложных корпоративных систем, платформ сбора и анализа данных, финансовых сервисов и других критически важных систем?</text>
+        <allowedMistakes checkedUnnecessary="0" notCheckedNecessary="0" />
+        <item id="1" isCorrect="true">PostgreSQL</item>
+        <item id="2" isCorrect="false">MongoDB</item>
+        <item id="3" isCorrect="false">NoSQL</item>
+        <item id="4" isCorrect="false">Redis</item>
+    </question.choice>
+    <question.choice id="subjectAreaClass" multiple="true" shuffle="true" maxScore="1">
+        <text>Что делает класс предметной области?</text>
+        <allowedMistakes checkedUnnecessary="0" notCheckedNecessary="0" />
+        <item id="1" isCorrect="false">Инкапсулирует основную сущность предметной области, не обладающую значимостью независимо от других данных.</item>
+        <item id="2" isCorrect="true">Инкапсулирует основную сущность предметной области, обладающую значимостью независимо от других данных.</item>
+        <item id="3" isCorrect="false">Инкапсулирует основную сущность предметной области, обладающую значимостью, которая зависит от других данных.</item>
+    </question.choice>
+    <question.choice id="operationsInterfaces" multiple="true" shuffle="true" maxScore="1">
+        <text>Выберете интерфейсы типа Operations:</text>
+        <allowedMistakes checkedUnnecessary="0" notCheckedNecessary="0" />
+        <item id="1" isCorrect="true">MongoOperations</item>
+        <item id="2" isCorrect="true">RedisOperations</item>
+        <item id="3" isCorrect="true">CassandraOperations</item>
+        <item id="4" isCorrect="false">H2</item>
+    </question.choice>
+    <question.choice id="dataBaseForNoSQL" multiple="true" shuffle="true" maxScore="1">
+        <text>Какая база относится к документно-ориентированной базе данных NoSQL?</text>
+        <allowedMistakes checkedUnnecessary="0" notCheckedNecessary="0" />
+        <item id="1" isCorrect="false">PostgreSQL</item>
+        <item id="2" isCorrect="true">MongoDB</item>
+        <item id="3" isCorrect="false">Redis</item>
+        <item id="4" isCorrect="false">H2</item>
+    </question.choice>
+</slide.quiz>
