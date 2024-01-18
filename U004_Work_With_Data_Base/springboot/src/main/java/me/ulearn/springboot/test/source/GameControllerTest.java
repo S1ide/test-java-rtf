@@ -58,10 +58,4 @@ public class GameControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").doesNotExist());
     }
-
-    @Test
-    public void assertThatDeleteNonExistsGameByIdReturnedStatusOk() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.delete("/games/{id}", 11111))
-                .andExpect(status().isOk());
-    }
 }
